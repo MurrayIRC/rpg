@@ -19,6 +19,6 @@ typedef struct window {
 
 window window_init(int w, int h, const char* name);
 bool window_should_close(window window);
-void window_create_surface(GLFWwindow* window, VkInstance instance, VkSurfaceKHR* surface);
+bool window_create_surface(GLFWwindow* window, VkInstance instance, VkSurfaceKHR* surface);
 
 #endif

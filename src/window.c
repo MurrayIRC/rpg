@@ -15,8 +15,6 @@ bool window_should_close(window window) {
     return glfwWindowShouldClose(window.glfw_window);
 }
 
-void window_create_surface(GLFWwindow* window, VkInstance instance, VkSurfaceKHR* surface) {
-    if (glfwCreateWindowSurface(instance, window, NULL, surface) != VK_SUCCESS) {
-        printf("[ERROR]: Failed to create window surface.");
-    }
+bool window_create_surface(GLFWwindow* window, VkInstance instance, VkSurfaceKHR* surface) {
+    return glfwCreateWindowSurface(instance, window, NULL, surface);
 }
