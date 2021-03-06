@@ -26,21 +26,22 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-vk_device device_init() {
+vk_device vkd_init(window *w) {
     vk_device d;
     d.physical_device = VK_NULL_HANDLE;
+    d.window = w;
     
-    create_instance(d);
-    setup_debug_messenger(d);
-    create_surface(d);
-    pick_physical_device(d, false);
-    create_logical_device(d);
-    create_command_pool(d);
+    vkd_create_instance(d);
+    vkd_setup_debug_messenger(d);
+    vkd_create_surface(d);
+    vkd_pick_physical_device(d, false);
+    vkd_create_logical_device(d);
+    vkd_create_command_pool(d);
     
     return d;
 }
 
-void device_free(vk_device dev) {
+void vkd_free(vk_device dev) {
     vkDestroyCommandPool(dev.device_, dev.command_pool, NULL);
     vkDestroyDevice(dev.device_, NULL);
     
@@ -52,8 +53,8 @@ void device_free(vk_device dev) {
     vkDestroyInstance(dev.instance, NULL);
 }
 
-void create_instance(vk_device dev) {
-    if (enable_validation_layers && !check_validation_layer_support()) {
+void vkd_create_instance(vk_device dev) {
+    if (enable_validation_layers && !vkd_check_validation_layer_support()) {
         log_error("Validation layers requested, but not available!");
     }
     
@@ -70,7 +71,7 @@ void create_instance(vk_device dev) {
     create_info.pApplicationInfo = &app_info;
 
     uint32_t required_extensions_count;
-    const char** extensions = get_required_extensions(&required_extensions_count);
+    const char** extensions = vkd_get_required_extensions(&required_extensions_count);
     create_info.enabledExtensionCount = required_extensions_count;
     create_info.ppEnabledExtensionNames = (const char* const*)extensions;
 
@@ -79,7 +80,7 @@ void create_instance(vk_device dev) {
         create_info.enabledLayerCount = num_validation_layers;
         create_info.ppEnabledLayerNames = &validation_layers;
 
-        populate_debug_messenger_create_info(debug_create_info);
+        vkd_populate_debug_messenger_create_info(debug_create_info);
         create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)debug_create_info;
     } else {
         create_info.enabledLayerCount = 0;
@@ -96,13 +97,13 @@ void create_instance(vk_device dev) {
     if (enable_validation_layers) {
         free(debug_create_info);
     }
-    has_glfw_required_instance_extensions();
+    vkd_has_glfw_required_instance_extensions();
 }
 
-void setup_debug_messenger(vk_device dev) {
+void vkd_setup_debug_messenger(vk_device dev) {
     if (!enable_validation_layers) return;
     VkDebugUtilsMessengerCreateInfoEXT* create_info;
-    populate_debug_messenger_create_info(create_info);
+    vkd_populate_debug_messenger_create_info(create_info);
     if (create_debug_utils_messenger_EXT(dev.instance, create_info, NULL, &dev.debug_messenger) != VK_SUCCESS) {
         log_error("Failed to set up debug messenger!");
     }
@@ -110,14 +111,14 @@ void setup_debug_messenger(vk_device dev) {
     free(create_info);
 }
 
-void create_surface(vk_device dev) {
+void vkd_create_surface(vk_device dev) {
     if (!window_create_surface(dev.window->glfw_window, dev.instance, &dev.surface_)) {
         log_fatal("Trying to initialize Vulkan, but failed to create VkSurfaceKHR\n");
         exit(1);
     }
 }
 
-void pick_physical_device(vk_device dev, bool use_integrated) {
+void vkd_pick_physical_device(vk_device dev, bool use_integrated) {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(dev.instance, &device_count, NULL);
     if (device_count == 0) {
@@ -133,7 +134,7 @@ void pick_physical_device(vk_device dev, bool use_integrated) {
         VkPhysicalDeviceProperties device_properties;
         vkGetPhysicalDeviceProperties(devices[i], &device_properties);
 
-        if (is_device_suitable(dev, devices[i])) {
+        if (vkd_is_device_suitable(dev, devices[i])) {
             dev.physical_device = devices[i];
             if (!use_integrated && device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
                 break;
@@ -155,8 +156,8 @@ void pick_physical_device(vk_device dev, bool use_integrated) {
     free(devices);
 }
 
-void create_logical_device(vk_device dev) {
-    queue_family_indices indices = find_queue_families(dev, dev.physical_device);
+void vkd_create_logical_device(vk_device dev) {
+    queue_family_indices indices = vkd_find_queue_families(dev, dev.physical_device);
 
     float queue_priority = 1.0f;
     uint32_t queue_count = 0;
@@ -234,8 +235,8 @@ void create_logical_device(vk_device dev) {
     }
 }
 
-void create_command_pool(vk_device dev) {
-    queue_family_indices qfi = find_queue_families(dev, dev.physical_device);
+void vkd_create_command_pool(vk_device dev) {
+    queue_family_indices qfi = vkd_find_queue_families(dev, dev.physical_device);
 
     VkCommandPoolCreateInfo pool_info = {};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -247,23 +248,23 @@ void create_command_pool(vk_device dev) {
     }
 }
 
-bool is_device_suitable(vk_device dev, VkPhysicalDevice device) {
-    queue_family_indices indices = find_queue_families(dev, device);
+bool vkd_is_device_suitable(vk_device dev, VkPhysicalDevice device) {
+    queue_family_indices indices = vkd_find_queue_families(dev, device);
 
-    bool extensions_supported = check_device_extension_support(device);
+    bool extensions_supported = vkd_check_device_extension_support(device);
     bool swap_chain_adequate = false;
     if (extensions_supported) {
-        swap_chain_support_details swap_chain_support = query_swap_chain_support(dev, device);
+        swap_chain_support_details swap_chain_support = vkd_query_swap_chain_support(dev, device);
         swap_chain_adequate = swap_chain_support.formats != NULL && swap_chain_support.presentModes != NULL;
     }
 
     VkPhysicalDeviceFeatures supported_features;
     vkGetPhysicalDeviceFeatures(device, &supported_features);
 
-    return is_queue_family_complete(indices) && extensions_supported && swap_chain_adequate && supported_features.samplerAnisotropy;
+    return vkd_is_queue_family_complete(indices) && extensions_supported && swap_chain_adequate && supported_features.samplerAnisotropy;
 }
 
-const char** get_required_extensions(uint32_t* pCount) {
+const char** vkd_get_required_extensions(uint32_t* pCount) {
     uint32_t glfw_extension_count = 0;
     const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     uint32_t additional_extensions_count = sizeof(device_extensions) / sizeof(device_extensions[0]);
@@ -295,7 +296,7 @@ const char** get_required_extensions(uint32_t* pCount) {
 }
 
 
-bool check_validation_layer_support() {
+bool vkd_check_validation_layer_support() {
     uint32_t available_layer_count;
     vkEnumerateInstanceLayerProperties(&available_layer_count, NULL);
 
@@ -316,11 +317,11 @@ bool check_validation_layer_support() {
     return supported;
 }
 
-bool is_queue_family_complete(queue_family_indices qf) { 
+bool vkd_is_queue_family_complete(queue_family_indices qf) { 
     return qf.graphics_family_has_value && qf.present_family_has_value; 
 }
 
-queue_family_indices find_queue_families(vk_device dev, VkPhysicalDevice device) {
+queue_family_indices vkd_find_queue_families(vk_device dev, VkPhysicalDevice device) {
     queue_family_indices indices;
 
     uint32_t queue_family_count = 0;
@@ -347,7 +348,7 @@ queue_family_indices find_queue_families(vk_device dev, VkPhysicalDevice device)
             indices.present_family_has_value = true;
         }
 
-        if (is_queue_family_complete(indices)) {
+        if (vkd_is_queue_family_complete(indices)) {
             break;
         }
     }
@@ -355,7 +356,7 @@ queue_family_indices find_queue_families(vk_device dev, VkPhysicalDevice device)
     return indices;
 }
 
-void populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT* create_info) {
+void vkd_populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT* create_info) {
     VkDebugUtilsMessengerCreateInfoEXT* info = (VkDebugUtilsMessengerCreateInfoEXT*)malloc(sizeof(VkDebugUtilsMessengerCreateInfoEXT));
     info->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     info->messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
@@ -369,7 +370,7 @@ void populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT* cr
     create_info = info;
 }
 
-void has_glfw_required_instance_extensions() {
+void vkd_has_glfw_required_instance_extensions() {
     uint32_t extension_count = 0;
     vkEnumerateInstanceExtensionProperties(NULL, &extension_count, NULL);
     VkExtensionProperties* extensions = malloc(extension_count * sizeof(VkExtensionProperties));
@@ -385,7 +386,7 @@ void has_glfw_required_instance_extensions() {
     
     printf("Required Extensions:\n");
     uint32_t required_extensions_count;
-    const char** required_extensions = get_required_extensions(&required_extensions_count);
+    const char** required_extensions = vkd_get_required_extensions(&required_extensions_count);
 
     for (uint32_t i = 0; i < required_extensions_count; i++) {
         printf("\t%s", required_extensions[i]);
@@ -404,14 +405,14 @@ void has_glfw_required_instance_extensions() {
     free(required_extensions);
 }
 
-bool check_device_extension_support(VkPhysicalDevice device) {
+bool vkd_check_device_extension_support(VkPhysicalDevice device) {
     uint32_t supported_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &supported_extension_count, NULL);
     VkExtensionProperties* supported_extensions = malloc(supported_extension_count * sizeof(VkExtensionProperties));
     vkEnumerateDeviceExtensionProperties(device, NULL, &supported_extension_count, supported_extensions);
 
     uint32_t required_extensions_count;
-    const char** required_extension_names = get_required_extensions(&required_extensions_count);
+    const char** required_extension_names = vkd_get_required_extensions(&required_extensions_count);
 
     bool check = true;
 
@@ -435,7 +436,7 @@ bool check_device_extension_support(VkPhysicalDevice device) {
     return check;
 }
 
-swap_chain_support_details query_swap_chain_support(vk_device dev, VkPhysicalDevice device) {
+swap_chain_support_details vkd_query_swap_chain_support(vk_device dev, VkPhysicalDevice device) {
     swap_chain_support_details details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, dev.surface_, &details.capabilities);
 

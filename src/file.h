@@ -37,7 +37,6 @@ typedef struct file {
     const char *path;
     unsigned long size;
     FILE *fp;
-    char *buffer;
 } *file;
 
 /// Opens a file from the given path for read/write operations

@@ -5,8 +5,7 @@
 
 #include "window.h"
 #include "device.h"
-// #include "renderer/pipeline.h"
-// #include "renderer/device.h"
+#include "pipeline.h"
 
 #include <stdbool.h>
 
@@ -15,7 +14,6 @@ static const int HEIGHT = 600;
 
 bool app_run();
 
-static vk_device device;
 // Pipeline pipeline { device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", Pipeline::DefaultPipelineConfigInfo(WIDTH, HEIGHT) };
 
 #endif
