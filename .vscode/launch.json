@@ -15,8 +15,9 @@
       "environment": [],
       "externalConsole": false,
       "targetArchitecture": "x64",
-      "MIMode": "gdb",
+      "MIMode": "lldb",
       "windows": {
+        "MIMode": "gdb",
         "program": "${workspaceFolder}/build/debug/rpg.exe",
       },
       "setupCommands": [
@@ -39,8 +40,9 @@
       "externalConsole": false,
       "targetArchitecture": "x64",
       "program": "${workspaceFolder}/build/release/rpg",
-      "MIMode": "gdb",
+      "MIMode": "lldb",
       "windows": {
+        "MIMode": "gdb",
         "program": "${workspaceFolder}/build/release/rpg.exe",
       },
       "preLaunchTask": "build release",
