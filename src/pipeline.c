@@ -2,13 +2,12 @@
 #include "file.h"
 #include "log.h"
 #include <assert.h>
-#include <stdlib.h>
 
-r_pipeline pipeline_init(r_device* dev, const char *vert_fp, const char *frag_fp, const pipeline_config_info* config_info) {
+RenderPipeline pipeline_create(RenderDevice* dev, const char *vert_fp, const char *frag_fp, const PipelineConfigInfo* config_info) {
     assert(config_info->pipeline_layout != NULL && "Cannot create graphics pipeline: no pipelineLayout provided in config info.");
     assert(config_info->render_pass != NULL && "Cannot create graphics pipeline: no renderPass provided in config info.");
 
-    r_pipeline pipeline;
+    RenderPipeline pipeline;
     pipeline.device = dev;
 
     const char* vert_code;
@@ -81,8 +80,8 @@ r_pipeline pipeline_init(r_device* dev, const char *vert_fp, const char *frag_fp
     return pipeline;
 }
 
-pipeline_config_info pipeline_default_pipeline_config_info(uint32_t width, uint32_t height) {
-    pipeline_config_info config_info = {
+PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
+    PipelineConfigInfo config_info = {
         .input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
         .input_assembly_info.primitiveRestartEnable = VK_FALSE,
@@ -160,11 +159,11 @@ pipeline_config_info pipeline_default_pipeline_config_info(uint32_t width, uint3
     return config_info;
 }
 
-void pipeline_create_shader_module(r_device *dev, const char *code, VkShaderModule *shader_module) {
+void pipeline_create_shader_module(RenderDevice *dev, const char *code, VkShaderModule *shader_module) {
     VkShaderModuleCreateInfo create_info = {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .codeSize = sizeof(code),
-        .pCode = (const uint32_t*)code,
+        .pCode = (const uint32*)code,
     };
 
     VkResult result = vkCreateShaderModule(dev->vk_device, &create_info, NULL, shader_module);
@@ -174,7 +173,7 @@ void pipeline_create_shader_module(r_device *dev, const char *code, VkShaderModu
     }
 }
 
-void pipeline_free(r_pipeline pipeline) {
+void pipeline_destroy(RenderPipeline pipeline) {
     vkDestroyShaderModule(pipeline.device->vk_device, pipeline.frag_shader_module, NULL);
     vkDestroyShaderModule(pipeline.device->vk_device, pipeline.vert_shader_module, NULL);
     vkDestroyPipeline(pipeline.device->vk_device, pipeline.graphics_pipeline, NULL);

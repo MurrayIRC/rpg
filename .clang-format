@@ -1,29 +1,12 @@
-# Common settings
-TabWidth:        4
-IndentWidth:     4
-UseTab:          Never
-ColumnLimit: 100
-
-BreakBeforeBraces: Custom
-BraceWrapping: {
-    AfterClass: 'false'
-    AfterControlStatement: 'false'
-    AfterEnum : 'false'
-    AfterFunction : 'true'
-    AfterNamespace : 'false'
-    AfterStruct : 'false'
-    AfterUnion : 'false'
-    BeforeCatch : 'false'
-    BeforeElse : 'false'
-    IndentBraces : 'false'
-    AfterExternBlock : 'false'
-    SplitEmptyFunction : 'false'
-    SplitEmptyRecord : 'false'
-    SplitEmptyNamespace : 'false'
-}
-
+---
+BasedOnStyle: llvm
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AllowShortFunctionsOnASingleLine: None
+KeepEmptyLinesAtTheStartOfBlocks: false
+---
+Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Right
-MacroBlockBegin: ''
-MacroBlockEnd: ''
-IndentPPDirectives: BeforeHash
+---

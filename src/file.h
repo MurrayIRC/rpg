@@ -1,8 +1,8 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include "kore.h"
 #include <stdio.h>
-#include <stdbool.h>
 
 typedef enum file_mode {
     /* Reads text from a file. 
@@ -84,7 +84,7 @@ void file_write(file f, unsigned long offset, unsigned long size, void *data);
         \param path The path to check
         \return Either true or false if it exists
 */
-bool file_exists(const char *path);
+boolean file_exists(const char *path);
 
 /*
     Closes the file object

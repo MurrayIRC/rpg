@@ -1,11 +1,7 @@
 #include "device.h"
 #include "log.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-
-struct r_device dev = { 0 };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
     log_info("Validation Layer: %s\n", callback_data->pMessage);
@@ -29,41 +25,47 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     }
 }
 
-void device_init(window *w) {
-    dev.physical_device = VK_NULL_HANDLE;
-    dev.window = w;
+RenderDevice *device_create(Window *w) {
+    RenderDevice *device;
+    device = malloc(sizeof(*device));
+    device->vk_physical_device = VK_NULL_HANDLE;
+    device->window = w;
     
     log_info("CREATING INSTANCE\n");
-    device_create_instance();
+    device_create_instance(device);
 
     log_info("CREATING SURFACE\n");
-    device_create_surface();
+    device_create_surface(device);
 
     log_info("PICKING PHYSICAL DEVICE\n");
-    device_pick_physical_device(false);
+    device_pick_physical_device(device, FALSE);
 
     log_info("CREATING LOGICAL DEVICE\n");
-    device_create_logical_device();
+    device_create_logical_device(device);
 
     log_info("CREATING COMMAND POOL\n");
-    device_create_command_pool();
+    device_create_command_pool(device);
+
+    return device;
 }
 
-void device_free() {
-    vkDestroyCommandPool(dev.vk_device, dev.command_pool, NULL);
-    vkDestroyDevice(dev.vk_device, NULL);
+void device_destroy(RenderDevice *device) {
+    vkDestroyCommandPool(device->vk_device, device->command_pool, NULL);
+    vkDestroyDevice(device->vk_device, NULL);
     
-    if (enable_validation_layers == true) {
-        DestroyDebugUtilsMessengerEXT(dev.instance, dev.debug_messenger, NULL);
+    if (enable_validation_layers == TRUE) {
+        DestroyDebugUtilsMessengerEXT(device->instance, device->debug_messenger, NULL);
     }
     
-    vkDestroySurfaceKHR(dev.instance, dev.vk_surface, NULL);
-    vkDestroyInstance(dev.instance, NULL);
+    vkDestroySurfaceKHR(device->instance, device->vk_surface, NULL);
+    vkDestroyInstance(device->instance, NULL);
+
+    free(device);
 }
 
-void device_create_instance() {
+void device_create_instance(RenderDevice *device) {
     if (enable_validation_layers && !device_check_validation_layer_support()) {
-        log_error("Validation layers requested, but not available!");
+        log_error("Validation layers requested, but not available!\n");
     }
     
     VkApplicationInfo app_info = {
@@ -75,7 +77,7 @@ void device_create_instance() {
         .apiVersion = VK_API_VERSION_1_0
     };
 
-    uint32_t required_extensions_count;
+    uint32 required_extensions_count;
     device_get_required_extensions(NULL, &required_extensions_count);
     char **required_extension_names = (char **)malloc(required_extensions_count * sizeof(char *));
     device_get_required_extensions((const char **)required_extension_names, &required_extensions_count);
@@ -101,14 +103,14 @@ void device_create_instance() {
             .pUserData = NULL
         };
 
-        if (create_debug_utils_messenger_EXT(dev.instance, &debug_create_info, NULL, &dev.debug_messenger) != VK_SUCCESS) {
+        if (create_debug_utils_messenger_EXT(device->instance, &debug_create_info, NULL, &device->debug_messenger) != VK_SUCCESS) {
             log_error("Failed to set up debug messenger!\n");
         }
 
         create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debug_create_info;
     }
 
-    VkResult result = vkCreateInstance(&create_info, NULL, &dev.instance);
+    VkResult result = vkCreateInstance(&create_info, NULL, &device->instance);
     if (result != VK_SUCCESS) {
         log_fatal("Trying to initialize Vulkan, but failed to create VkInstance: %i\n", result);
         exit(1);
@@ -118,32 +120,32 @@ void device_create_instance() {
     device_has_glfw_required_instance_extensions();
 }
 
-void device_create_surface() {
-    if (!window_create_surface(dev.window->glfw_window, dev.instance, &dev.vk_surface)) {
+void device_create_surface(RenderDevice *device) {
+    if (!window_create_surface(device->window->glfw_window, device->instance, &device->vk_surface)) {
         log_fatal("Trying to initialize Vulkan, but failed to create VkSurfaceKHR\n");
         exit(1);
     }
 }
 
-void device_pick_physical_device(bool use_integrated) {
-    uint32_t device_count = 0;
-    vkEnumeratePhysicalDevices(dev.instance, &device_count, NULL);
+void device_pick_physical_device(RenderDevice *device, boolean use_integrated) {
+    uint32 device_count = 0;
+    vkEnumeratePhysicalDevices(device->instance, &device_count, NULL);
     if (device_count == 0) {
         log_fatal("Trying to initialize Vulkan, but there is no GPU with Vulkan support.\n");
         exit(1);
     }
     VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(device_count * sizeof(VkPhysicalDevice));
-    vkEnumeratePhysicalDevices(dev.instance, &device_count, devices);
+    vkEnumeratePhysicalDevices(device->instance, &device_count, devices);
 
-    dev.physical_device = devices[0];
+    device->vk_physical_device = devices[0];
 
-    uint32_t i;
+    uint32 i;
     for (i = 0; i < device_count; i++) {
         VkPhysicalDeviceProperties device_properties;
         vkGetPhysicalDeviceProperties(devices[i], &device_properties);
 
-        if (device_is_device_suitable(devices[i])) {
-            dev.physical_device = devices[i];
+        if (device_is_device_suitable(device, devices[i])) {
+            device->vk_physical_device = devices[i];
             if (!use_integrated && device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
                 break;
             }
@@ -153,22 +155,22 @@ void device_pick_physical_device(bool use_integrated) {
         }
     }
 
-    if (dev.physical_device == VK_NULL_HANDLE) {
+    if (device->vk_physical_device == VK_NULL_HANDLE) {
         log_fatal("Trying to initialize Vulkan, but there is no suitable device found for Vulkan.\n");
         exit(1);
     }
 
-    vkGetPhysicalDeviceProperties(dev.physical_device, dev.properties);
-    log_info("Using Graphics Device: %s", dev.properties->deviceName);
+    vkGetPhysicalDeviceProperties(device->vk_physical_device, device->properties);
+    log_info("Using Graphics Device: %s", device->properties->deviceName);
 
     free(devices);
 }
 
-void device_create_logical_device() {
-    queue_family_indices indices = device_find_queue_families(dev.physical_device);
+void device_create_logical_device(RenderDevice *device) {
+    QueueFamilyIndices indices = device_find_queue_families(device, device->vk_physical_device);
 
     float queue_priority = 1.0f;
-    uint32_t queue_count = 0;
+    uint32 queue_count = 0;
     VkDeviceQueueCreateInfo queue_create_infos[3];
 
     VkDeviceQueueCreateInfo graphics_queue_info = {
@@ -229,21 +231,21 @@ void device_create_logical_device() {
         device_info.enabledLayerCount = 0;
     }
 
-    VkResult result = vkCreateDevice(dev.physical_device, &device_info, NULL, &dev.vk_device);
+    VkResult result = vkCreateDevice(device->vk_physical_device, &device_info, NULL, &device->vk_device);
     if (result != VK_SUCCESS) {
         log_fatal("Trying to initialize Vulkan, but failed to create VkDevice: %i\n", result);
         exit(1);
     }
 
-    vkGetDeviceQueue(dev.vk_device, indices.graphics_family, 0, &dev.graphics_queue);
-    vkGetDeviceQueue(dev.vk_device, indices.present_family, 0, &dev.present_queue);
+    vkGetDeviceQueue(device->vk_device, indices.graphics_family, 0, &device->graphics_queue);
+    vkGetDeviceQueue(device->vk_device, indices.present_family, 0, &device->present_queue);
     if (indices.compute_family_has_value) {
-        vkGetDeviceQueue(dev.vk_device, indices.compute_family, 0, &dev.compute_queue);
+        vkGetDeviceQueue(device->vk_device, indices.compute_family, 0, &device->compute_queue);
     }
 }
 
-void device_create_command_pool() {
-    queue_family_indices qfi = device_find_queue_families(dev.physical_device);
+void device_create_command_pool(RenderDevice *device) {
+    QueueFamilyIndices qfi = device_find_queue_families(device, device->vk_physical_device);
 
     VkCommandPoolCreateInfo pool_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -251,32 +253,32 @@ void device_create_command_pool() {
         .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
     };
 
-    if (vkCreateCommandPool(dev.vk_device, &pool_info, NULL, &dev.command_pool) != VK_SUCCESS) {
+    if (vkCreateCommandPool(device->vk_device, &pool_info, NULL, &device->command_pool) != VK_SUCCESS) {
         log_error("Failed to create command pool!");
     }
 }
 
-bool device_is_device_suitable(VkPhysicalDevice device) {
-    queue_family_indices indices = device_find_queue_families(device);
+boolean device_is_device_suitable(RenderDevice *device, VkPhysicalDevice vk_physical_device) {
+    QueueFamilyIndices indices = device_find_queue_families(device, vk_physical_device);
 
-    bool extensions_supported = device_check_device_extension_support(device);
-    bool swap_chain_adequate = false;
+    boolean extensions_supported = device_check_device_extension_support(vk_physical_device);
+    boolean swap_chain_adequate = FALSE;
     if (extensions_supported) {
-        swap_chain_support_details swap_chain_support = device_query_swap_chain_support(device);
+        SwapChainSupportDetails swap_chain_support = device_query_swap_chain_support(device, vk_physical_device);
         swap_chain_adequate = swap_chain_support.formats != NULL && swap_chain_support.presentModes != NULL;
     }
 
     VkPhysicalDeviceFeatures supported_features;
-    vkGetPhysicalDeviceFeatures(device, &supported_features);
+    vkGetPhysicalDeviceFeatures(vk_physical_device, &supported_features);
 
     return device_is_queue_family_complete(indices) && extensions_supported && swap_chain_adequate && supported_features.samplerAnisotropy;
 }
 
-void device_get_required_extensions(const char **p_names, uint32_t* p_count) {
-    uint32_t glfw_extension_count = 0;
+void device_get_required_extensions(const char **p_names, uint32* p_count) {
+    uint32 glfw_extension_count = 0;
     const char **glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
     *p_count = glfw_extension_count + num_device_extensions;
-    uint32_t i;
+    uint32 i;
     for (i = 0; i < glfw_extension_count; i++) {
         if (p_names != NULL) {
             p_names[i] = glfw_extensions[i];
@@ -308,18 +310,19 @@ void device_get_required_extensions(const char **p_names, uint32_t* p_count) {
 }
 
 
-bool device_check_validation_layer_support() {
-    uint32_t available_layer_count;
+boolean device_check_validation_layer_support(void) {
+    uint32 available_layer_count;
     vkEnumerateInstanceLayerProperties(&available_layer_count, NULL);
 
     VkLayerProperties* available_layers = malloc(available_layer_count * sizeof(VkLayerProperties));
     vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers);
 
-    bool supported = false;
-    uint32_t i;
+    boolean supported = FALSE;
+    uint32 i;
     for (i = 0; i < available_layer_count; i++) {
+        log_info("available layer: %s\n", available_layers[i].layerName);
         if (strcmp(available_layers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
-            supported = true;
+            supported = TRUE;
         }
     }
     if (!supported) {
@@ -330,36 +333,36 @@ bool device_check_validation_layer_support() {
     return supported;
 }
 
-bool device_is_queue_family_complete(queue_family_indices qf) { 
+boolean device_is_queue_family_complete(QueueFamilyIndices qf) { 
     return qf.graphics_family_has_value && qf.present_family_has_value; 
 }
 
-queue_family_indices device_find_queue_families(VkPhysicalDevice device) {
-    queue_family_indices indices;
+QueueFamilyIndices device_find_queue_families(RenderDevice *device, VkPhysicalDevice vk_physical_device) {
+    QueueFamilyIndices indices;
 
-    uint32_t queue_family_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
+    uint32 queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(vk_physical_device, &queue_family_count, NULL);
 
     VkQueueFamilyProperties* queue_families = malloc(queue_family_count * sizeof(VkQueueFamilyProperties));
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
+    vkGetPhysicalDeviceQueueFamilyProperties(vk_physical_device, &queue_family_count, queue_families);
 
-    uint32_t i;
+    uint32 i;
     for (i = 0; i < queue_family_count; i++) {
         if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT && !indices.graphics_family_has_value) {
             indices.graphics_family = i;
-            indices.graphics_family_has_value = true;
+            indices.graphics_family_has_value = TRUE;
         }
 
         if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT && !indices.compute_family_has_value) {
             indices.compute_family = i;
-            indices.compute_family_has_value = true;
+            indices.compute_family_has_value = TRUE;
         }
 
-        VkBool32 present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, dev.vk_surface, &present_support);
+        VkBool32 present_support = FALSE;
+        vkGetPhysicalDeviceSurfaceSupportKHR(vk_physical_device, i, device->vk_surface, &present_support);
         if (queue_families[i].queueCount > 0 && present_support && !indices.present_family_has_value) {
             indices.present_family = i;
-            indices.present_family_has_value = true;
+            indices.present_family_has_value = TRUE;
         }
 
         if (device_is_queue_family_complete(indices)) {
@@ -370,8 +373,8 @@ queue_family_indices device_find_queue_families(VkPhysicalDevice device) {
     return indices;
 }
 
-void device_has_glfw_required_instance_extensions() {
-    uint32_t extension_count = 0;
+void device_has_glfw_required_instance_extensions(void) {
+    uint32 extension_count = 0;
     vkEnumerateInstanceExtensionProperties(NULL, &extension_count, NULL);
     VkExtensionProperties* extensions = malloc(extension_count * sizeof(VkExtensionProperties));
     vkEnumerateInstanceExtensionProperties(NULL, &extension_count, extensions);
@@ -379,25 +382,25 @@ void device_has_glfw_required_instance_extensions() {
     log_info("Available Extensions:\n");
     char *available[extension_count];
 
-    uint32_t i;
+    uint32 i;
     for (i = 0; i < extension_count; i++) {
         log_info("\t%s\n", extensions[i].extensionName);
         available[i] = extensions[i].extensionName;
     }
     
     log_info("Required Extensions:\n");
-    uint32_t required_extensions_count;
+    uint32 required_extensions_count;
     device_get_required_extensions(NULL, &required_extensions_count);
     char **required_extension_names = (char **)malloc(required_extensions_count * sizeof(char *));
     device_get_required_extensions((const char **)required_extension_names, &extension_count);
 
     for (i = 0; i < required_extensions_count; i++) {
         log_info("\t%s\n", required_extension_names[i]);
-        bool found = false;
-        uint32_t j;
+        boolean found = FALSE;
+        uint32 j;
         for (j = 0; j < extension_count; j++) {
             if (strcmp(available[j], required_extension_names[i]) != 0) {
-                found = true;
+                found = TRUE;
             }
         }
 
@@ -409,32 +412,32 @@ void device_has_glfw_required_instance_extensions() {
     free(required_extension_names);
 }
 
-bool device_check_device_extension_support(VkPhysicalDevice device) {
-    uint32_t supported_extension_count;
+boolean device_check_device_extension_support(VkPhysicalDevice device) {
+    uint32 supported_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &supported_extension_count, NULL);
     VkExtensionProperties* supported_extensions = malloc(supported_extension_count * sizeof(VkExtensionProperties));
     vkEnumerateDeviceExtensionProperties(device, NULL, &supported_extension_count, supported_extensions);
 
-    uint32_t required_extensions_count;
+    uint32 required_extensions_count;
     device_get_required_extensions(NULL, &required_extensions_count);
     char **required_extension_names = (char **)malloc(required_extensions_count * sizeof(char*));
     device_get_required_extensions((const char **)required_extension_names, &required_extensions_count);
 
-    bool check = true;
+    boolean check = TRUE;
 
-    uint32_t i;
+    uint32 i;
     for (i = 0; i < required_extensions_count; i++) {
-        bool extension_supported = false;
-        uint32_t j;
+        boolean extension_supported = FALSE;
+        uint32 j;
         for (j = 0; j < supported_extension_count; j++) {
             if (strcmp(supported_extensions[j].extensionName, required_extension_names[i]) == 0) {
-                extension_supported = true;
+                extension_supported = TRUE;
                 break;
             }
         }
 
         if (!extension_supported) {
-            check = false;
+            check = FALSE;
         }
     }
 
@@ -444,27 +447,27 @@ bool device_check_device_extension_support(VkPhysicalDevice device) {
     return check;
 }
 
-swap_chain_support_details device_query_swap_chain_support(VkPhysicalDevice device) {
-    swap_chain_support_details details;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, dev.vk_surface, &details.capabilities);
+SwapChainSupportDetails device_query_swap_chain_support(RenderDevice *device, VkPhysicalDevice vk_physical_device) {
+    SwapChainSupportDetails details;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk_physical_device, device->vk_surface, &details.capabilities);
 
-    uint32_t format_count;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, dev.vk_surface, &format_count, NULL);
+    uint32 format_count;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(vk_physical_device, device->vk_surface, &format_count, NULL);
 
     if (format_count != 0) {
         VkSurfaceFormatKHR* formats = (VkSurfaceFormatKHR*)malloc(format_count * sizeof(VkSurfaceFormatKHR));
         details.formats = formats;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, dev.vk_surface, &format_count, details.formats);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(vk_physical_device, device->vk_surface, &format_count, details.formats);
         free(formats);
     }
 
-    uint32_t present_mode_count;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, dev.vk_surface, &present_mode_count, NULL);
+    uint32 present_mode_count;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(vk_physical_device, device->vk_surface, &present_mode_count, NULL);
 
     if (present_mode_count != 0) {
         VkPresentModeKHR* modes = (VkPresentModeKHR*)malloc(format_count * sizeof(VkPresentModeKHR));
         details.presentModes = modes;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, dev.vk_surface, &present_mode_count, details.presentModes);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(vk_physical_device, device->vk_surface, &present_mode_count, details.presentModes);
     }
     return details;
 }

@@ -3,22 +3,24 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "kore.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <stdbool.h>
 #include <stdio.h>
 
-typedef struct window {
-    int width;
-    int height;
+typedef struct {
+    int32 width;
+    int32 height;
     
     const char* name;
     GLFWwindow* glfw_window;
-} window;
+} Window;
 
-window window_init(int w, int h, const char* name);
-bool window_should_close(window window);
-bool window_create_surface(GLFWwindow* window, VkInstance instance, VkSurfaceKHR* surface);
+Window *window_create(const int32 w, const int32 h, const char* name);
+boolean window_should_close(Window *window);
+boolean window_create_surface(GLFWwindow *glfw_window, VkInstance instance, VkSurfaceKHR* surface);
+void window_destroy(Window *window);
 
 #endif

@@ -1,12 +1,11 @@
 #include "app.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
-int main() {
+int main(void) {
     if (!app_run()) {
-        return EXIT_FAILURE;
+        return 1;
     }
     
-    return EXIT_SUCCESS;
+    return 0;
 }

@@ -3,17 +3,11 @@
 #ifndef APP_H
 #define APP_H
 
-#include "window.h"
-#include "device.h"
-#include "pipeline.h"
+#include "kore.h"
 
-#include <stdbool.h>
+static const int32 WINDOW_WIDTH = 800;
+static const int32 WINDOW_HEIGHT = 600;
 
-static const int WIDTH = 800;
-static const int HEIGHT = 600;
-
-bool app_run();
-
-/* Pipeline pipeline { device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", Pipeline::DefaultPipelineConfigInfo(WIDTH, HEIGHT) }; */
+boolean app_run(void);
 
 #endif

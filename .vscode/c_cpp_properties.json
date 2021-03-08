@@ -15,7 +15,7 @@
                 "PLATFORM_DESKTOP"
             ],
             "compilerPath": "C:/Program Files/LLVM/bin/clang.exe",
-            "cStandard": "c89",
+            "cStandard": "gnu89",
             "intelliSenseMode": "clang-x64"
         },
         {
@@ -34,7 +34,7 @@
                 "/Library/Frameworks"
             ],
             "compilerPath": "/usr/bin/clang",
-            "cStandard": "c89",
+            "cStandard": "gnu89",
             "intelliSenseMode": "clang-x64"
         },
         {
@@ -49,7 +49,7 @@
                 "_UNICODE",
                 "PLATFORM_DESKTOP"
             ],
-            "cStandard": "c89",
+            "cStandard": "gnu89",
             "intelliSenseMode": "clang-x64"
         }
     ],

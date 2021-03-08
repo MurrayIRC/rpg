@@ -1,9 +1,10 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+#include "kore.h"
 #include "device.h"
 
-typedef struct pipeline_config_info {
+typedef struct {
     VkViewport viewport;
     VkRect2D scissor;
     VkPipelineViewportStateCreateInfo viewport_info;
@@ -15,20 +16,20 @@ typedef struct pipeline_config_info {
     VkPipelineDepthStencilStateCreateInfo depth_stencil_info;
     VkPipelineLayout pipeline_layout;
     VkRenderPass render_pass;
-    uint32_t subpass;
-} pipeline_config_info;
+    uint32 subpass;
+} PipelineConfigInfo;
 
-typedef struct r_pipeline {
-    r_device *device;
+typedef struct {
+    RenderDevice *device;
     VkPipeline graphics_pipeline;
     VkShaderModule vert_shader_module;
     VkShaderModule frag_shader_module;
-} r_pipeline;
+} RenderPipeline;
 
-r_pipeline pipeline_init(r_device *dev, const char *vert_fp, const char *frag_fp, const pipeline_config_info* config_info);
-pipeline_config_info pipeline_default_pipeline_config_info(uint32_t width, uint32_t height);
-void pipeline_free(r_pipeline pipeline);
-void pipeline_create_shader_module(r_device *dev, const char *code, VkShaderModule *shader_module);
+RenderPipeline pipeline_create(RenderDevice *dev, const char *vert_fp, const char *frag_fp, const PipelineConfigInfo* config_info);
+PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height);
+void pipeline_create_shader_module(RenderDevice *dev, const char *code, VkShaderModule *shader_module);
+void pipeline_destroy(RenderPipeline pipeline);
 
 
 #endif

@@ -1,8 +1,6 @@
 #include "file.h"
 #include "log.h"
 
-#include <stdlib.h>
-
 static void validate_file(file f) {
     if (f == NULL) {
         log_fatal("Trying to perform operations on an uninitialized file object.\n");
@@ -92,13 +90,13 @@ void file_write(file f, unsigned long offset, unsigned long size, void* data) {
     SDL_RWseek(f->RW, 0, RW_SEEK_SET);*/
 }
 
-bool file_exists(const char* path) {
+boolean file_exists(const char* path) {
     FILE *f = fopen(path, "r");
     if (f == NULL) {
-        return false;
+        return FALSE;
     } else {
         fclose(f);
-        return true;
+        return TRUE;
     }
 }
 
