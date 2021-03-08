@@ -116,7 +116,7 @@ ifeq ($(PLATFORM_OS),LINUX)
 endif
 
 ifeq ($(PLATFORM_OS),WINDOWS)
-	LDLIBS += -L$(WIN_GLFW_LIB) -L$(WIN_VULKAN_LIB) -L$(WIN_CGLM_LIB) -lglfw3dll -lvulkan-1
+	LDLIBS += -L$(WIN_GLFW_LIB) -L$(WIN_VULKAN_BIN) -L$(WIN_VULKAN_LIB) -L$(WIN_CGLM_LIB) -lglfw3dll -lvulkan-1
 endif
 ifeq ($(PLATFORM_OS),LINUX)
 	# Libraries for Debian GNU/Linux desktop compiling

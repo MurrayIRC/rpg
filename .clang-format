@@ -1,12 +1,9 @@
----
+Language: Cpp
 BasedOnStyle: llvm
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 AllowShortFunctionsOnASingleLine: None
 KeepEmptyLinesAtTheStartOfBlocks: false
----
-Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Right
----

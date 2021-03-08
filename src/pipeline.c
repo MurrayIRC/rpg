@@ -152,8 +152,8 @@ PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
         .depth_stencil_info.minDepthBounds = 0.0f,  /* Optional */
         .depth_stencil_info.maxDepthBounds = 1.0f,  /* Optional */
         .depth_stencil_info.stencilTestEnable = VK_FALSE,
-        .depth_stencil_info.front = {},  /* Optional */
-        .depth_stencil_info.back = {},   /* Optional */
+        .depth_stencil_info.front = VK_NULL_HANDLE, /* Optional */
+        .depth_stencil_info.back = VK_NULL_HANDLE,   /* Optional */
     };
 
     return config_info;

@@ -36,6 +36,9 @@
     <ClCompile Include="src\pipeline.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
@@ -59,11 +62,15 @@
     <ClInclude Include="src\pipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\kore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simple_shader.frag" />
     <None Include="shaders\simple_shader.frag.spv" />
     <None Include="shaders\simple_shader.vert" />
     <None Include="shaders\simple_shader.vert.spv" />
+    <None Include=".clang-format" />
   </ItemGroup>
 </Project>

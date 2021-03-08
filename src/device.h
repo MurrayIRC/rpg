@@ -29,10 +29,9 @@ static const boolean enable_validation_layers = FALSE;
 
 typedef struct {
     VkInstance instance;
-    VkDebugUtilsMessengerEXT debug_messenger;
     VkPhysicalDevice vk_physical_device;
-    VkPhysicalDeviceProperties* properties;
     VkCommandPool command_pool;
+    VkRenderPass render_pass;
     Window* window;
 
     VkDevice vk_device;
@@ -54,10 +53,10 @@ void device_destroy(RenderDevice *device);
 
 /* internal helper functions */
 void device_create_instance(RenderDevice *device);
-void device_setup_debug_messenger(RenderDevice *device);
 void device_create_surface(RenderDevice *device);
 void device_pick_physical_device(RenderDevice *device, boolean use_integrated);
 void device_create_logical_device(RenderDevice *device);
+void device_create_render_pass(RenderDevice *device);
 void device_create_command_pool(RenderDevice *device);
 
 uint32 device_find_memory_type(uint32 type_filter, VkMemoryPropertyFlags properties);
@@ -73,11 +72,11 @@ void device_copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32 width, u
 void device_create_image_with_info(const VkImageCreateInfo* image_info, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* image_memory);
 
 boolean device_is_device_suitable(RenderDevice *device, VkPhysicalDevice physical_device);
-void device_get_required_extensions(const char **p_names, uint32* pCount);
+const char **device_get_required_extensions(uint32* pCount);
 boolean device_check_validation_layer_support(void);
-boolean device_is_queue_family_complete(QueueFamilyIndices qf);
-QueueFamilyIndices device_find_queue_families(RenderDevice *device, VkPhysicalDevice physical_device);
-void device_has_glfw_required_instance_extensions(void);
+boolean device_is_queue_family_complete(QueueFamilyIndices *qf);
+QueueFamilyIndices *device_find_queue_families(RenderDevice *device, VkPhysicalDevice physical_device);
+void device_check_instance_extension_support();
 boolean device_check_device_extension_support(VkPhysicalDevice device);
 SwapChainSupportDetails device_query_swap_chain_support(RenderDevice *device, VkPhysicalDevice physical_device);
 

@@ -2,9 +2,16 @@
 #include "window.h"
 #include "device.h"
 #include "pipeline.h"
+#include "log.h"
 
 boolean app_run(void) {
     Window *win = window_create(WINDOW_WIDTH, WINDOW_HEIGHT, "rpg");
+
+    if (!glfwVulkanSupported()) {
+        log_fatal("Vulkan unsupported.\n");
+        exit(1);
+    }
+
     RenderDevice *device = device_create(win);
 
     /* VkPipelineLayout pipeline_layout;
@@ -15,9 +22,8 @@ boolean app_run(void) {
         glfwPollEvents();
     }
 
-    /*device_destroy(); */
+    
     /* pipeline_destroy(pipeline); */
-
     device_destroy(device);
     window_destroy(win);
     

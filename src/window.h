@@ -5,7 +5,7 @@
 
 #include "kore.h"
 
-#define GLFW_INCLUDE_VULKAN
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
@@ -20,7 +20,7 @@ typedef struct {
 
 Window *window_create(const int32 w, const int32 h, const char* name);
 boolean window_should_close(Window *window);
-boolean window_create_surface(GLFWwindow *glfw_window, VkInstance instance, VkSurfaceKHR* surface);
+boolean window_create_surface(VkInstance instance, GLFWwindow *glfw_window, VkSurfaceKHR* surface);
 void window_destroy(Window *window);
 
 #endif

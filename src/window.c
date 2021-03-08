@@ -22,7 +22,7 @@ boolean window_should_close(Window *window) {
     return glfwWindowShouldClose(window->glfw_window);
 }
 
-boolean window_create_surface(GLFWwindow *glfw_window, VkInstance instance, VkSurfaceKHR* surface) {
+boolean window_create_surface(VkInstance instance, GLFWwindow *glfw_window, VkSurfaceKHR* surface) {
     return glfwCreateWindowSurface(instance, glfw_window, NULL, surface);
 }
 

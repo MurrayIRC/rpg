@@ -21,6 +21,8 @@
 		"xhash": "c",
 		"xtree": "c",
 		"iterator": "c",
-		"xutility": "c"
+		"xutility": "c",
+		"atomic": "cpp",
+		"xstring": "cpp"
 	}
 }

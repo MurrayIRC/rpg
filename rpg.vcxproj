@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app.c" />
+    <ClCompile Include="src\debug.c" />
     <ClCompile Include="src\device.c" />
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\log.c" />
@@ -168,11 +169,13 @@
     <ClInclude Include="src\app.h" />
     <ClInclude Include="src\device.h" />
     <ClInclude Include="src\file.h" />
+    <ClInclude Include="src\kore.h" />
     <ClInclude Include="src\log.h" />
     <ClInclude Include="src\pipeline.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".clang-format" />
     <None Include="shaders\simple_shader.frag" />
     <None Include="shaders\simple_shader.frag.spv" />
     <None Include="shaders\simple_shader.vert" />
