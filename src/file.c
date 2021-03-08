@@ -28,7 +28,7 @@ file file_open(const char* path, file_mode mode) {
     }
 
     f->fp = fopen(path, file_mode_str);
-    // f->buffer = SDL_RWFromFile(path, fileMode);
+    /* f->buffer = SDL_RWFromFile(path, fileMode); */
     if (f->fp == NULL) {
         log_fatal("Trying to open file %s that doesn't exist.\n", path);
         exit(1);
@@ -64,12 +64,12 @@ void file_read(file f, unsigned long offset, unsigned long size, void* data) {
     }
 
     fseek(f->fp, offset, SEEK_SET);
-    fread(f->fp, size, 1, data); // This is probably wrong.
+    fread(f->fp, size, 1, data); /* This is probably wrong. */
     fseek(f->fp, 0, SEEK_SET);
 
-    //SDL_RWseek(file->RW, offset, RW_SEEK_SET);
-    //SDL_RWread(file->RW, data, size, 1);
-    //SDL_RWseek(file->RW, 0, RW_SEEK_SET);
+    /*SDL_RWseek(file->RW, offset, RW_SEEK_SET);*/
+    /*SDL_RWread(file->RW, data, size, 1);*/
+    /*SDL_RWseek(file->RW, 0, RW_SEEK_SET);*/
 }
 
 void file_write(file f, unsigned long offset, unsigned long size, void* data) {
@@ -84,12 +84,12 @@ void file_write(file f, unsigned long offset, unsigned long size, void* data) {
     }
 
     fseek(f->fp, offset, SEEK_SET);
-    fwrite(f->fp, size, 1, data); // this is also probably wrong...
+    fwrite(f->fp, size, 1, data); /* this is also probably wrong... */
     fseek(f->fp, 0, SEEK_SET);
 
-    //SDL_RWseek(f->RW, offset, RW_SEEK_SET);
-    //SDL_RWwrite(f->RW, data, size, 1);
-    //SDL_RWseek(f->RW, 0, RW_SEEK_SET);
+    /*SDL_RWseek(f->RW, offset, RW_SEEK_SET);
+    SDL_RWwrite(f->RW, data, size, 1);
+    SDL_RWseek(f->RW, 0, RW_SEEK_SET);*/
 }
 
 bool file_exists(const char* path) {

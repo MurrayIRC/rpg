@@ -72,7 +72,7 @@ void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
     struct tm *lt = localtime(&t);
     #endif
 
-    // Log to stderr
+    /* Log to stderr */
     if (!log_data.quiet) {
         va_list args;
         char buf[16];
@@ -89,7 +89,7 @@ void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
         fflush(stderr);
     }
 
-    // Log to file
+    /* Log to file */
     if (log_data.fp) {
         va_list args;
         char buf[32];

@@ -14,6 +14,13 @@
 		"window.h": "c",
 		"cmath": "c",
 		"vector": "c",
-		"stdlib.h": "c"
+		"stdlib.h": "c",
+		"system_error": "c",
+		"xmemory": "c",
+		"set": "c",
+		"xhash": "c",
+		"xtree": "c",
+		"iterator": "c",
+		"xutility": "c"
 	}
 }

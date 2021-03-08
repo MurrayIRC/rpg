@@ -14,6 +14,6 @@ static const int HEIGHT = 600;
 
 bool app_run();
 
-// Pipeline pipeline { device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", Pipeline::DefaultPipelineConfigInfo(WIDTH, HEIGHT) };
+/* Pipeline pipeline { device, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", Pipeline::DefaultPipelineConfigInfo(WIDTH, HEIGHT) }; */
 
 #endif

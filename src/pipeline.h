@@ -18,17 +18,17 @@ typedef struct pipeline_config_info {
     uint32_t subpass;
 } pipeline_config_info;
 
-typedef struct vk_pipeline {
-    vk_device *device;
+typedef struct r_pipeline {
+    r_device *device;
     VkPipeline graphics_pipeline;
     VkShaderModule vert_shader_module;
     VkShaderModule frag_shader_module;
-} vk_pipeline;
+} r_pipeline;
 
-vk_pipeline vkp_init(vk_device *dev, const char *vert_fp, const char *frag_fp, const pipeline_config_info* config_info);
-pipeline_config_info vkp_default_pipeline_config_info(uint32_t width, uint32_t height);
-void vkp_free(vk_pipeline pipeline);
-void vkp_create_shader_module(vk_device *dev, const char *code, VkShaderModule *shader_module);
+r_pipeline pipeline_init(r_device *dev, const char *vert_fp, const char *frag_fp, const pipeline_config_info* config_info);
+pipeline_config_info pipeline_default_pipeline_config_info(uint32_t width, uint32_t height);
+void pipeline_free(r_pipeline pipeline);
+void pipeline_create_shader_module(r_device *dev, const char *code, VkShaderModule *shader_module);
 
 
 #endif

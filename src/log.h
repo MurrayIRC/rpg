@@ -21,8 +21,4 @@ void log_set_quiet(int enable);
 
 void log_dispatch(int level, const char *file, int line, const char *fmt, ...);
 
-//void log_info(const char* msg, ...);
-//void log_warning(const char* msg, ...);
-//void log_error(const char* msg, ...);
-
 #endif
