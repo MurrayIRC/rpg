@@ -8,7 +8,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverity
     return VK_FALSE;
 }
 
-VkResult create_debug_utils_messenger_EXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* create_info, const VkAllocationCallbacks* allocator, VkDebugUtilsMessengerEXT* debug_messenger) {
+void populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT *create_info) {
+    create_info->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    create_info->messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    create_info->messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    create_info->pfnUserCallback = debug_callback;
+    create_info->pUserData = NULL;
+}
+
+VkResult device_create_debug_utils_messenger(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* create_info, const VkAllocationCallbacks* allocator, VkDebugUtilsMessengerEXT* debug_messenger) {
     PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     
     if (func != NULL) {
@@ -18,7 +26,7 @@ VkResult create_debug_utils_messenger_EXT(VkInstance instance, const VkDebugUtil
     }
 }
 
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* allocator) {
+void device_destroy_debug_utils_messenger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* allocator) {
     PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != NULL) {
         func(instance, debug_messenger, allocator);
@@ -33,6 +41,9 @@ RenderDevice *device_create(Window *w) {
     
     log_info("CREATING INSTANCE\n");
     device_create_instance(device);
+
+    log_info("SETTING UP DEBUG MESSENGER\n");
+    device_setup_debug_messenger(device);
 
     log_info("CREATING SURFACE\n");
     device_create_surface(device);
@@ -54,7 +65,7 @@ void device_destroy(RenderDevice *device) {
     vkDestroyDevice(device->vk_device, NULL);
     
     if (enable_validation_layers == TRUE) {
-        DestroyDebugUtilsMessengerEXT(device->instance, device->debug_messenger, NULL);
+        device_destroy_debug_utils_messenger(device->instance, device->debug_messenger, NULL);
     }
     
     vkDestroySurfaceKHR(device->instance, device->vk_surface, NULL);
@@ -95,18 +106,8 @@ void device_create_instance(RenderDevice *device) {
         create_info.enabledLayerCount = num_validation_layers;
         create_info.ppEnabledLayerNames = (const char* const*)validation_layers;
 
-        VkDebugUtilsMessengerCreateInfoEXT debug_create_info = {
-            .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-            .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-            .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-            .pfnUserCallback = debug_callback,
-            .pUserData = NULL
-        };
-
-        if (create_debug_utils_messenger_EXT(device->instance, &debug_create_info, NULL, &device->debug_messenger) != VK_SUCCESS) {
-            log_error("Failed to set up debug messenger!\n");
-        }
-
+        VkDebugUtilsMessengerCreateInfoEXT debug_create_info;
+        populate_debug_messenger_create_info(&debug_create_info);
         create_info.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debug_create_info;
     }
 
@@ -118,6 +119,18 @@ void device_create_instance(RenderDevice *device) {
 
     free(required_extension_names);
     device_has_glfw_required_instance_extensions();
+}
+
+void device_setup_debug_messenger(RenderDevice *device) {
+    if (!enable_validation_layers) {
+        return;
+    }
+
+    VkDebugUtilsMessengerCreateInfoEXT create_info;
+    populate_debug_messenger_create_info(&create_info);
+    if (device_create_debug_utils_messenger(device->instance, &create_info, NULL, &device->debug_messenger) != VK_SUCCESS) {
+        log_error("Failed to set up debug messenger!\n");
+    }
 }
 
 void device_create_surface(RenderDevice *device) {
@@ -320,7 +333,6 @@ boolean device_check_validation_layer_support(void) {
     boolean supported = FALSE;
     uint32 i;
     for (i = 0; i < available_layer_count; i++) {
-        log_info("available layer: %s\n", available_layers[i].layerName);
         if (strcmp(available_layers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
             supported = TRUE;
         }

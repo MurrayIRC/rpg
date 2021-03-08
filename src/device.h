@@ -22,7 +22,7 @@ typedef struct {
 } QueueFamilyIndices;
 
 #ifdef _DEBUG
-static const boolean enable_validation_layers = FALSE;
+static const boolean enable_validation_layers = TRUE;
 #else
 static const boolean enable_validation_layers = FALSE;
 #endif
@@ -54,6 +54,7 @@ void device_destroy(RenderDevice *device);
 
 /* internal helper functions */
 void device_create_instance(RenderDevice *device);
+void device_setup_debug_messenger(RenderDevice *device);
 void device_create_surface(RenderDevice *device);
 void device_pick_physical_device(RenderDevice *device, boolean use_integrated);
 void device_create_logical_device(RenderDevice *device);

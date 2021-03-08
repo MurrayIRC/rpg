@@ -1,5 +1,6 @@
 .PHONY: all clean
 include .env
+export
 
 PROJECT_NAME       ?= rpg
 
@@ -91,6 +92,9 @@ INCLUDE_PATHS = -I.
 ifeq ($(PLATFORM_OS),WINDOWS)
 	INCLUDE_PATHS += -I$(WIN_GLFW_INC) -I$(WIN_VULKAN_INC) -I$(WIN_CGLM_INC)
 endif
+ifeq ($(PLATFORM_OS),OSX)
+	INCLUDE_PATHS += -I$(PATH)
+endif
 ifeq ($(PLATFORM_OS),BSD)
 	INCLUDE_PATHS += -I/usr/local/include
 endif
@@ -127,7 +131,7 @@ endif
 ifeq ($(PLATFORM_OS),OSX)
 	# Libraries for OSX 10.9 desktop compiling
 	# NOTE: Required packages: libopenal-dev libegl1-mesa-dev
-	LDLIBS = -lglfw -lvulkan -framework Cocoa -framework IOKit -framework CoreVideo
+	LDLIBS = -lglfw -lvulkan -lMoltenVK -framework Cocoa -framework IOKit -framework CoreVideo
 endif
 ifeq ($(PLATFORM_OS),BSD)
 	# Libraries for FreeBSD, OpenBSD, NetBSD, DragonFly desktop compiling
