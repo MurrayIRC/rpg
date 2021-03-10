@@ -15,9 +15,10 @@
       "externalConsole": true,
       "targetArchitecture": "x64",
       "MIMode": "lldb",
+      "program": "",
       "windows": {
         "MIMode": "gdb",
-        "program": "${workspaceFolder}/build/debug/win/rpg.exe",
+        "program": "${workspaceFolder}/build/debug/win/rpg.exe"
       },
       "osx": {
         "program": "${workspaceFolder}/build/debug/osx/rpg",

@@ -13,9 +13,7 @@
                 ]
             },
             "windows": {
-                "args": [
-                    "./build/build_win_d.sh"
-                ]
+                "command": "./build/build_win_d.bat",
             },
             "linux": {
                 "args": [

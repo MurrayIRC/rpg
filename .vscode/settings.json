@@ -23,6 +23,11 @@
 		"iterator": "c",
 		"xutility": "c",
 		"atomic": "cpp",
-		"xstring": "cpp"
+		"xstring": "cpp",
+		"functional": "c",
+		"type_traits": "c",
+		"xlocnum": "c",
+		"xtr1common": "c",
+		"kore.h": "c"
 	}
 }

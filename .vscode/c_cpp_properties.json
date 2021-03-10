@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/VulkanSDK/1.2.162.1/Include",
+                "${workspaceFolder}/external",
+                "C:/work/c/libraries/glew/include",
                 "C:/work/c/libraries/glfw/include",
                 "C:/work/c/libraries/cglm/include"
             ],

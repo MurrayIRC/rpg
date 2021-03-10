@@ -35,7 +35,7 @@ typedef enum file_mode {
 
 typedef struct file {
     const char *path;
-    unsigned long size;
+    uint32 size;
     FILE *fp;
 } *file;
 
@@ -52,7 +52,7 @@ file file_open(const char *path, file_mode mode);
         \param f The file object
         \return The file size
 */
-unsigned long file_get_size(file f);
+uint32 file_get_size(file f);
 
 /*
     Gets the path from a file object
@@ -68,7 +68,7 @@ const char* file_get_path(file f);
         \param size The size in bytes to read
         \param data A preallocated pointer that the memory will be copied to
 */
-void file_read(file f, unsigned long offset, unsigned long size, void *data);
+void file_read(file f, uint32 offset, uint32 size, void *data);
 
 /*
     Writes data to a file
@@ -77,7 +77,7 @@ void file_read(file f, unsigned long offset, unsigned long size, void *data);
         \param size The size in bytes to write
         \param data A pointer to the data to write
 */
-void file_write(file f, unsigned long offset, unsigned long size, void *data);
+void file_write(file f, uint32 offset, uint32 size, void *data);
 
 /*
     Checks if a file exists

@@ -1,5 +1,7 @@
 #include "app.h"
 #include "window.h"
+#include "shader.h"
+
 #include "log.h"
 
 bool app_run(void) {
@@ -28,11 +30,17 @@ bool app_run(void) {
 
     glViewport(0, 0, win->width, win->height);
 
+    // SHADER SHIT ------------
+    Shader *simple_shader = shader_create("shaders/simple.vert", "shaders/simple.frag");
+    // ------------------------
+
     while (!window_should_close(win)) {
         glfwPollEvents();
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(simple_shader->program_id);
 
         // 1st attribute buffer : vertices
         glEnableVertexAttribArray(0);
@@ -53,6 +61,7 @@ bool app_run(void) {
     }
     
     window_destroy(win);
+    shader_destroy(simple_shader);
     
     return true;
 }
