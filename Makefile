@@ -17,18 +17,6 @@ else
 	ifeq ($(UNAMEOS),Linux)
 		PLATFORM_OS=LINUX
 	endif
-	ifeq ($(UNAMEOS),FreeBSD)
-		PLATFORM_OS=BSD
-	endif
-	ifeq ($(UNAMEOS),OpenBSD)
-		PLATFORM_OS=BSD
-	endif
-	ifeq ($(UNAMEOS),NetBSD)
-		PLATFORM_OS=BSD
-	endif
-	ifeq ($(UNAMEOS),DragonFly)
-		PLATFORM_OS=BSD
-	endif
 	ifeq ($(UNAMEOS),Darwin)
 		PLATFORM_OS=OSX
 	endif
@@ -44,10 +32,6 @@ CC = clang
 
 ifeq ($(PLATFORM_OS),OSX)
 	# OSX default compiler
-	CC = clang
-endif
-ifeq ($(PLATFORM_OS),BSD)
-	# FreeBSD, OpenBSD, NetBSD, DragonFly default compiler
 	CC = clang
 endif
 
@@ -81,22 +65,22 @@ endif
 
 # Additional flags for compiler (if desired)
 #CFLAGS += -Wextra -Wmissing-prototypes -Wstrict-prototypes
+ifeq ($(PLATFORM_OS),OSX)
+	CFLAGS += -objective-c
+endif
 ifeq ($(PLATFORM_OS),LINUX)
 	CFLAGS += -D_DEFAULT_SOURCE
 endif
 
 # Define include paths for required headers
 # NOTE: Several external required libraries (stb and others)
-INCLUDE_PATHS = -I. -Iexternal/glad
+INCLUDE_PATHS = -I.
 
 ifeq ($(PLATFORM_OS),WINDOWS)
 	INCLUDE_PATHS += -I$(WIN_GLFW_INC) -I$(WIN_CGLM_INC)
 endif
 ifeq ($(PLATFORM_OS),OSX)
 	INCLUDE_PATHS += -I$(PATH)
-endif
-ifeq ($(PLATFORM_OS),BSD)
-	INCLUDE_PATHS += -I/usr/local/include
 endif
 ifeq ($(PLATFORM_OS),LINUX)
 	# Reset everything.
@@ -106,9 +90,6 @@ endif
 # Define library paths containing required libs.
 LDFLAGS = -L.
 
-ifeq ($(PLATFORM_OS),BSD)
-	LDFLAGS += -L. -Lsrc -L/usr/local/lib
-endif
 ifeq ($(PLATFORM_OS),LINUX)
 	# Reset everything.
 	# Precedence: immediately local, installed version, raysan5 provided libs
@@ -116,7 +97,7 @@ ifeq ($(PLATFORM_OS),LINUX)
 endif
 
 ifeq ($(PLATFORM_OS),WINDOWS)
-	LDLIBS += -L$(WIN_GLFW_LIB) -L$(WIN_GLEW_LIB) -L$(WIN_CGLM_LIB) -lglfw3dll
+	LDLIBS += -L$(WIN_CGLM_LIB) -lkernel32 -luser32 -lshell32 -lgdi32 -lAdvapi32 -lopengl32
 endif
 ifeq ($(PLATFORM_OS),LINUX)
 	# Libraries for Debian GNU/Linux desktop compiling
@@ -124,22 +105,14 @@ ifeq ($(PLATFORM_OS),LINUX)
 	LDLIBS = -lm -lpthread -ldl -lrt
 
 	# On X11 requires also below libraries
-	LDLIBS += -lX11 -lXrandr -lXi -lglfw -lvulkan
+	LDLIBS += -lX11 -lXrandr -lXi -lGl
 	# NOTE: It seems additional libraries are not required any more, latest GLFW just dlopen them
 	#LDLIBS += -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor
 endif
 ifeq ($(PLATFORM_OS),OSX)
 	# Libraries for OSX 10.9 desktop compiling
-	# NOTE: Required packages: libopenal-dev libegl1-mesa-dev
-	LDLIBS = -lglfw -lvulkan -lMoltenVK -framework Cocoa -framework IOKit -framework CoreVideo
-endif
-ifeq ($(PLATFORM_OS),BSD)
-	# Libraries for FreeBSD, OpenBSD, NetBSD, DragonFly desktop compiling
-	# NOTE: Required packages: mesa-libs
-	LDLIBS = -lpthread -lm
-
-	# On XWindow requires also below libraries
-	LDLIBS += -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -lglfw -lvulkan
+	# -lvulkan -lMoltenVK
+	LDLIBS = -framework Foundation -framework CoreFoundation -framework CoreVideo -framework IOKit -framework Cocoa -framework Carbon -framework OpenGL
 endif
 
 # Define a recursive wildcard function

@@ -6,13 +6,22 @@
         {
             "label": "build debug",
             "type": "process",
-            "command": "make",
-            "windows": {
-                "command": "mingw32-make",
+            "command": "bash",
+            "osx": {
+                "args": [
+                    "./build/build_osx_d.sh"
+                ]
             },
-            "args": [
-                "BUILD_MODE=debug",
-            ],
+            "windows": {
+                "args": [
+                    "./build/build_win_d.sh"
+                ]
+            },
+            "linux": {
+                "args": [
+                    "./build/build_linux_d.sh"
+                ]
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -21,20 +30,38 @@
                 "$gcc"
             ]
         },
-        {
-            "label": "build release",
-            "type": "process",
-            "command": "make",
-            "windows": {
-                "command": "mingw32-make",
-            },
-            "args": [
-                "BUILD_MODE=release"
-            ],
-            "group": "build",
-            "problemMatcher": [
-                "$gcc"
-            ]
-        }
+        // {
+        //     "label": "build debug",
+        //     "type": "process",
+        //     "command": "make",
+        //     "windows": {
+        //         "command": "mingw32-make",
+        //     },
+        //     "args": [
+        //         "BUILD_MODE=debug",
+        //     ],
+        //     "group": {
+        //         "kind": "build",
+        //         "isDefault": true
+        //     },
+        //     "problemMatcher": [
+        //         "$gcc"
+        //     ]
+        // },
+        // {
+        //     "label": "build release",
+        //     "type": "process",
+        //     "command": "make",
+        //     "windows": {
+        //         "command": "mingw32-make",
+        //     },
+        //     "args": [
+        //         "BUILD_MODE=release"
+        //     ],
+        //     "group": "build",
+        //     "problemMatcher": [
+        //         "$gcc"
+        //     ]
+        // }
     ]
 }

@@ -3,16 +3,37 @@
 #ifndef KORE_H
 #define	KORE_H
 
-#ifndef GLAD_IMPL
-#define GLAD_IMPL
-#include "external/glad/glad_impl.h"
-#endif // GLAD_IMPL
+/* Platform Apple */
+#if (defined __APPLE__ || defined _APPLE)   
+    #define PLATFORM_APPLE
+/* Platform Windows */
+#elif (defined _WIN32 || defined _WIN64)
+    // Necessary windows defines before including windows.h.
+    #define OEMRESOURCE
+    #define PLATFORM_WIN
+    #include <windows.h>
+/* Platform Linux */
+#elif (defined linux || defined _linux || defined __linux__)
+    #define PLATFORM_LINUX
+/* Platform Emscripten */
+#elif (defined __EMSCRIPTEN__)
+    #define PLATFORM_WEB
+/* Else - Platform Undefined and Unsupported */
+#endif
 
+#if (defined PLATFORM_APPLE || defined PLATFORM_LINUX)
+    #include <sched.h>
+    #include <unistd.h>
+#elif (defined PLATFORM_WINDOWS)
+    #include <windows.h>
+#endif
+
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <stdbool.h>
 
-#ifdef _WIN32
+#ifdef PLATFORM_WIN
 typedef unsigned int uint;
 #else
 #include <sys/types.h>
@@ -40,10 +61,10 @@ typedef uint64_t uint64;
 #define PI  3.1415926535897932384626433832795028841971693993751058209749445923
 
 #ifndef NO_MEMORY_DEBUG
-#define MEMORY_DEBUG /* turns on the memory debugging system */
+//#define MEMORY_DEBUG /* turns on the memory debugging system */
 #endif
 #ifndef EXIT_CRASH
-#define EXIT_CRASH /* turns on crash on exit */
+//#define EXIT_CRASH /* turns on crash on exit */
 #endif
 
 #ifdef MEMORY_DEBUG

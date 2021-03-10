@@ -4,7 +4,6 @@
 #define WINDOW_H
 
 #include "kore.h"
-
 #include <stdio.h>
 
 typedef struct {

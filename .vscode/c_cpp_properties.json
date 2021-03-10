@@ -21,7 +21,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/external"
             ],
             "defines": [
                 "_DEBUG",

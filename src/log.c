@@ -63,7 +63,7 @@ void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
     lock();
 
     time_t t = time(NULL);
-    #ifdef _WIN32
+    #ifdef PLATFORM_WIN
     struct tm l;
     struct tm *lt = &l;
     localtime_s(lt, &t);
