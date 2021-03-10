@@ -20,7 +20,7 @@ RenderDevice *device_create(Window *w) {
     device_create_surface(device);
 
     log_info("---PICKING PHYSICAL DEVICE---\n");
-    device_pick_physical_device(device, FALSE);
+    device_pick_physical_device(device, false);
 
     log_info("---CREATING LOGICAL DEVICE---\n");
     device_create_logical_device(device);
@@ -84,7 +84,7 @@ void device_create_instance(RenderDevice *device) {
 }
 
 void device_create_surface(RenderDevice *device) {
-    boolean result = window_create_surface(device->instance, device->window->glfw_window, &device->vk_surface);
+    bool result = window_create_surface(device->instance, device->window->glfw_window, &device->vk_surface);
 
     if (result != VK_SUCCESS) {
         log_fatal("Trying to initialize Vulkan, but failed to create VkSurfaceKHR\n");
@@ -92,7 +92,7 @@ void device_create_surface(RenderDevice *device) {
     }
 }
 
-void device_pick_physical_device(RenderDevice *device, boolean use_integrated) {
+void device_pick_physical_device(RenderDevice *device, bool use_integrated) {
     uint32 device_count = 0;
     vkEnumeratePhysicalDevices(device->instance, &device_count, NULL);
     if (device_count == 0) {
@@ -174,8 +174,8 @@ void device_create_logical_device(RenderDevice *device) {
     }
 
     VkPhysicalDeviceFeatures device_features = {
-        .fillModeNonSolid = VK_TRUE,
-        .samplerAnisotropy = VK_TRUE,
+        .fillModeNonSolid = VK_true,
+        .samplerAnisotropy = VK_true,
     };
 
     VkDeviceCreateInfo device_info = {
@@ -281,11 +281,11 @@ void device_create_command_pool(RenderDevice *device) {
     free(qfi);
 }
 
-boolean device_is_device_suitable(RenderDevice *device, VkPhysicalDevice vk_physical_device) {
+bool device_is_device_suitable(RenderDevice *device, VkPhysicalDevice vk_physical_device) {
     QueueFamilyIndices *indices = device_find_queue_families(device, vk_physical_device);
 
-    boolean extensions_supported = device_check_device_extension_support(vk_physical_device);
-    boolean swap_chain_adequate = FALSE;
+    bool extensions_supported = device_check_device_extension_support(vk_physical_device);
+    bool swap_chain_adequate = false;
     if (extensions_supported) {
         SwapChainSupportDetails swap_chain_support = device_query_swap_chain_support(device, vk_physical_device);
         swap_chain_adequate = swap_chain_support.formats != NULL && swap_chain_support.presentModes != NULL;
@@ -294,7 +294,7 @@ boolean device_is_device_suitable(RenderDevice *device, VkPhysicalDevice vk_phys
     VkPhysicalDeviceFeatures supported_features;
     vkGetPhysicalDeviceFeatures(vk_physical_device, &supported_features);
 
-    boolean is_complete = device_is_queue_family_complete(indices);
+    bool is_complete = device_is_queue_family_complete(indices);
     free(indices);
     return is_complete && extensions_supported && swap_chain_adequate && supported_features.samplerAnisotropy;
 }
@@ -316,18 +316,18 @@ const char **device_get_required_extensions(uint32* p_count) {
     return p_names;
 }
 
-boolean device_check_validation_layer_support(void) {
+bool device_check_validation_layer_support(void) {
     uint32 available_layer_count;
     vkEnumerateInstanceLayerProperties(&available_layer_count, NULL);
 
     VkLayerProperties* available_layers = malloc(available_layer_count * sizeof(VkLayerProperties));
     vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers);
 
-    boolean supported = FALSE;
+    bool supported = false;
     uint32 i;
     for (i = 0; i < available_layer_count; i++) {
         if (strcmp(available_layers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
-            supported = TRUE;
+            supported = true;
         }
     }
     if (!supported) {
@@ -338,7 +338,7 @@ boolean device_check_validation_layer_support(void) {
     return supported;
 }
 
-boolean device_is_queue_family_complete(QueueFamilyIndices *qf) {
+bool device_is_queue_family_complete(QueueFamilyIndices *qf) {
     return qf->graphics_family_has_value && qf->present_family_has_value && qf->compute_family_has_value;
 }
 
@@ -356,19 +356,19 @@ QueueFamilyIndices *device_find_queue_families(RenderDevice *device, VkPhysicalD
     for (i = 0; i < queue_family_count; i++) {
         if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices->graphics_family = i;
-            indices->graphics_family_has_value = TRUE;
+            indices->graphics_family_has_value = true;
         }
 
         if (queue_families[i].queueCount > 0 && queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
             indices->compute_family = i;
-            indices->compute_family_has_value = TRUE;
+            indices->compute_family_has_value = true;
         }
 
-        VkBool32 present_support = FALSE;
+        VkBool32 present_support = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(vk_physical_device, i, device->vk_surface, &present_support);
         if (queue_families[i].queueCount > 0 && present_support) {
             indices->present_family = i;
-            indices->present_family_has_value = TRUE;
+            indices->present_family_has_value = true;
         }
 
         if (device_is_queue_family_complete(indices)) {
@@ -405,11 +405,11 @@ void device_check_instance_extension_support() {
     uint32 i;
     for (i = 0; i < num_required_extensions; i++)
     {
-        boolean is_extension_supported = FALSE;
+        bool is_extension_supported = false;
         uint32 j;
         for (j = 0; j < num_supported_extensions; j++) {
             if (strcmp(supported_extensions[j].extensionName, required_extension_names[i]) == 0) {
-                is_extension_supported = TRUE;
+                is_extension_supported = true;
                 break;
             }
         }
@@ -421,7 +421,7 @@ void device_check_instance_extension_support() {
     free(supported_extensions);
 }
 
-boolean device_check_device_extension_support(VkPhysicalDevice device) {
+bool device_check_device_extension_support(VkPhysicalDevice device) {
     uint32 supported_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &supported_extension_count, NULL);
     VkExtensionProperties* supported_extensions = malloc(supported_extension_count * sizeof(VkExtensionProperties));
@@ -430,21 +430,21 @@ boolean device_check_device_extension_support(VkPhysicalDevice device) {
     uint32 required_extensions_count;
     const char **required_extension_names = device_get_required_extensions(&required_extensions_count);
 
-    boolean check = TRUE;
+    bool check = true;
 
     uint32 i;
     for (i = 0; i < required_extensions_count; i++) {
-        boolean extension_supported = FALSE;
+        bool extension_supported = false;
         uint32 j;
         for (j = 0; j < supported_extension_count; j++) {
             if (strcmp(supported_extensions[j].extensionName, required_extension_names[i]) == 0) {
-                extension_supported = TRUE;
+                extension_supported = true;
                 break;
             }
         }
 
         if (!extension_supported) {
-            check = FALSE;
+            check = false;
         }
     }
 

@@ -87,10 +87,10 @@ endif
 
 # Define include paths for required headers
 # NOTE: Several external required libraries (stb and others)
-INCLUDE_PATHS = -I.
+INCLUDE_PATHS = -I. -Iexternal/glad
 
 ifeq ($(PLATFORM_OS),WINDOWS)
-	INCLUDE_PATHS += -I$(WIN_GLFW_INC) -I$(WIN_VULKAN_INC) -I$(WIN_CGLM_INC)
+	INCLUDE_PATHS += -I$(WIN_GLFW_INC) -I$(WIN_CGLM_INC)
 endif
 ifeq ($(PLATFORM_OS),OSX)
 	INCLUDE_PATHS += -I$(PATH)
@@ -116,13 +116,13 @@ ifeq ($(PLATFORM_OS),LINUX)
 endif
 
 ifeq ($(PLATFORM_OS),WINDOWS)
-	LDLIBS += -L$(WIN_GLFW_LIB) -L$(WIN_VULKAN_BIN) -L$(WIN_VULKAN_LIB) -L$(WIN_CGLM_LIB) -lglfw3dll -lvulkan-1
+	LDLIBS += -L$(WIN_GLFW_LIB) -L$(WIN_GLEW_LIB) -L$(WIN_CGLM_LIB) -lglfw3dll
 endif
 ifeq ($(PLATFORM_OS),LINUX)
 	# Libraries for Debian GNU/Linux desktop compiling
 	# NOTE: Required packages: libegl1-mesa-dev
 	LDLIBS = -lm -lpthread -ldl -lrt
-		
+
 	# On X11 requires also below libraries
 	LDLIBS += -lX11 -lXrandr -lXi -lglfw -lvulkan
 	# NOTE: It seems additional libraries are not required any more, latest GLFW just dlopen them
@@ -150,16 +150,9 @@ SRC_DIR = ./src
 OBJ_DIR = ./obj
 
 # Define all object files from source files
-#SOURCES := $(wildcard **/*.c)
 SOURCES := $(wildcard $(SRC_DIR)/*.c)
-#SOURCES = $(call rwildcard, $(SRC_DIR)/*.c, $(SRC_DIR)/*.h)
-#SOURCES := $(wildcard $(SRC_DIR)/*.c)
 OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 DEPENDS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.d,$(SOURCES))
-#OBJECTS := $(patsubst %.c,%.o,$(SRC))
-#OBJECTS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-#OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
-#OBJECTS = $(SRC_DIR)/main.c $(SRC_DIR)/app.c $(SRC_DIR)/renderer/window.c
 
 MAKEFILE_PARAMS = $(PROJECT_NAME)
 

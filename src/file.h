@@ -84,7 +84,7 @@ void file_write(file f, unsigned long offset, unsigned long size, void *data);
         \param path The path to check
         \return Either true or false if it exists
 */
-boolean file_exists(const char *path);
+bool file_exists(const char *path);
 
 /*
     Closes the file object

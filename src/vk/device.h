@@ -16,15 +16,15 @@ typedef struct {
     uint32 graphics_family;
     uint32 compute_family;
     uint32 present_family;
-    boolean graphics_family_has_value;
-    boolean compute_family_has_value;
-    boolean present_family_has_value;
+    bool graphics_family_has_value;
+    bool compute_family_has_value;
+    bool present_family_has_value;
 } QueueFamilyIndices;
 
 #ifdef _DEBUG
-static const boolean enable_validation_layers = TRUE;
+static const bool enable_validation_layers = true;
 #else
-static const boolean enable_validation_layers = FALSE;
+static const bool enable_validation_layers = false;
 #endif
 
 typedef struct {
@@ -54,7 +54,7 @@ void device_destroy(RenderDevice *device);
 /* internal helper functions */
 void device_create_instance(RenderDevice *device);
 void device_create_surface(RenderDevice *device);
-void device_pick_physical_device(RenderDevice *device, boolean use_integrated);
+void device_pick_physical_device(RenderDevice *device, bool use_integrated);
 void device_create_logical_device(RenderDevice *device);
 void device_create_render_pass(RenderDevice *device);
 void device_create_command_pool(RenderDevice *device);
@@ -71,13 +71,13 @@ void device_copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32 width, u
 
 void device_create_image_with_info(const VkImageCreateInfo* image_info, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* image_memory);
 
-boolean device_is_device_suitable(RenderDevice *device, VkPhysicalDevice physical_device);
+bool device_is_device_suitable(RenderDevice *device, VkPhysicalDevice physical_device);
 const char **device_get_required_extensions(uint32* pCount);
-boolean device_check_validation_layer_support(void);
-boolean device_is_queue_family_complete(QueueFamilyIndices *qf);
+bool device_check_validation_layer_support(void);
+bool device_is_queue_family_complete(QueueFamilyIndices *qf);
 QueueFamilyIndices *device_find_queue_families(RenderDevice *device, VkPhysicalDevice physical_device);
 void device_check_instance_extension_support();
-boolean device_check_device_extension_support(VkPhysicalDevice device);
+bool device_check_device_extension_support(VkPhysicalDevice device);
 SwapChainSupportDetails device_query_swap_chain_support(RenderDevice *device, VkPhysicalDevice physical_device);
 
 #endif

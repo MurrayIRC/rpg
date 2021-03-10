@@ -90,13 +90,13 @@ void file_write(file f, unsigned long offset, unsigned long size, void* data) {
     SDL_RWseek(f->RW, 0, RW_SEEK_SET);*/
 }
 
-boolean file_exists(const char* path) {
+bool file_exists(const char* path) {
     FILE *f = fopen(path, "r");
     if (f == NULL) {
-        return FALSE;
+        return false;
     } else {
         fclose(f);
-        return TRUE;
+        return true;
     }
 }
 

@@ -8,6 +8,6 @@
 static const int32 WINDOW_WIDTH = 800;
 static const int32 WINDOW_HEIGHT = 600;
 
-boolean app_run(void);
+bool app_run(void);
 
 #endif

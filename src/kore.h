@@ -3,35 +3,38 @@
 #ifndef KORE_H
 #define	KORE_H
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL    0 /* Defines NULL in C++*/
-#else
-#define NULL    ((void *)0) /* Defines NULL in C*/
-#endif
-#endif
+#ifndef GLAD_IMPL
+#define GLAD_IMPL
+#include "external/glad/glad_impl.h"
+#endif // GLAD_IMPL
 
-#ifndef TRUE
-#define TRUE 1 /* Defines TRUE */
-#endif
-#ifndef FALSE
-#define FALSE 0 /* Defines FALSE*/
-#endif
+#include <GLFW/glfw3.h>
+
+#include <stdbool.h>
+
 #ifdef _WIN32
 typedef unsigned int uint;
-typedef signed __int64 int64;
-typedef unsigned __int64 uint64;
 #else
 #include <sys/types.h>
 #endif
 
-typedef signed char int8;
-typedef unsigned char uint8;
-typedef signed short int16;
-typedef unsigned short uint16;
-typedef signed int int32;
-typedef unsigned int uint32;
-typedef unsigned char boolean;
+#include <stdint.h>
+typedef int8_t int8;
+typedef uint8_t uint8;
+typedef int16_t int16;
+typedef uint16_t uint16;
+typedef int32_t int32;
+typedef uint32_t uint32;
+typedef int64_t int64;
+typedef uint64_t uint64;
+
+// typedef signed char int8;
+// typedef unsigned char uint8;
+// typedef signed short int16;
+// typedef unsigned short uint16;
+// typedef signed int int32;
+// typedef unsigned int uint32;
+// typedef unsigned char boolean;
 
 /* Defines PI */
 #define PI  3.1415926535897932384626433832795028841971693993751058209749445923
@@ -53,7 +56,7 @@ extern void *debug_mem_realloc(void *pointer, uint size, char *file, uint line);
 extern void debug_mem_free(void *buf); /* Replaces free and records the c file and line where it was called*/
 extern void debug_mem_print(uint min_allocs); /* Prints out a list of all allocations made, their location, how much memorey each has allocated, freed, and how many allocations have been made. The min_allocs parameter can be set to avoid printing any allocations that have been made fewer times then min_allocs */
 extern void debug_mem_reset(void); /* f_debug_mem_reset allows you to clear all memory stored in the debugging system if you only want to record allocations after a specific point in your code*/
-extern boolean debug_memory(void); /*f_debug_memory checks if any of the bounds of any allocation has been over written and reports where to standard out. The function returns TRUE if any error was found*/
+extern bool debug_memory(void); /*f_debug_memory checks if any of the bounds of any allocation has been over written and reports where to standard out. The function returns TRUE if any error was found*/
 
 #define malloc(n) debug_mem_malloc(n, __FILE__, __LINE__) /* Replaces malloc. */
 #define realloc(n, m) debug_mem_realloc(n, m, __FILE__, __LINE__) /* Replaces realloc. */

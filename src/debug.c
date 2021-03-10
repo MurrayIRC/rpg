@@ -36,8 +36,8 @@ void debug_memory_init(void (*lock)(void *mutex), void (*unlock)(void *mutex), v
     alloc_mutex_unlock = unlock;
 }
 
-boolean debug_memory(void) {
-    boolean output = FALSE;
+bool debug_memory(void) {
+    bool output = false;
     uint i, j, k;
     if (alloc_mutex != NULL)
         alloc_mutex_lock(alloc_mutex);
@@ -60,7 +60,7 @@ boolean debug_memory(void) {
                     X[0] = 0;
                 }
 
-                output = TRUE;
+                output = true;
             }
         }
     }
@@ -138,7 +138,7 @@ void *debug_mem_malloc(uint size, char *file, uint line) {
     return pointer;
 }
 
-boolean debug_mem_remove(void *buf) {
+bool debug_mem_remove(void *buf) {
     uint i, j, k;
     for (i = 0; i < alloc_line_count; i++) {
         for (j = 0; j < alloc_lines[i].alloc_count; j++) {
@@ -154,11 +154,11 @@ boolean debug_mem_remove(void *buf) {
                 alloc_lines[i].size -= alloc_lines[i].allocs[j].size;
                 alloc_lines[i].allocs[j] = alloc_lines[i].allocs[--alloc_lines[i].alloc_count];
                 alloc_lines[i].freed++;
-                return TRUE;
+                return true;
             }
         }	
     }
-    return FALSE;
+    return false;
 }
 
 void debug_mem_free(void *buf) {

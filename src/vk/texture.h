@@ -68,11 +68,11 @@ typedef struct TextureConfigure
     /* The address mode to use */
     TextureAddressMode address_mode;
     /* Whether or not to use anisotropic filtering */
-    boolean anisotropic_filtering;
+    bool anisotropic_filtering;
     /* How many samplings to use for anisotropic filtering. Minimum is 1 and maximum is 16. */
     int32 anisotropy_level;
     /* Whether or not the texture is being loaded from data. */
-    boolean load_from_data;
+    bool load_from_data;
     /* The texture data object used if LoadFromData is true */
     TextureData *data;
 } TextureConfigure;

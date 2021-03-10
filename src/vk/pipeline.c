@@ -84,7 +84,7 @@ PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
     PipelineConfigInfo config_info = {
         .input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-        .input_assembly_info.primitiveRestartEnable = VK_FALSE,
+        .input_assembly_info.primitiveRestartEnable = VK_false,
 
         .viewport.x = 0.0f,
         .viewport.y = 0.0f,
@@ -104,29 +104,29 @@ PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
         .viewport_info.pScissors = &config_info.scissor,
 
         .rasterization_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .rasterization_info.depthClampEnable = VK_FALSE,
-        .rasterization_info.rasterizerDiscardEnable = VK_FALSE,
+        .rasterization_info.depthClampEnable = VK_false,
+        .rasterization_info.rasterizerDiscardEnable = VK_false,
         .rasterization_info.polygonMode = VK_POLYGON_MODE_FILL,
         .rasterization_info.lineWidth = 1.0f,
         .rasterization_info.cullMode = VK_CULL_MODE_NONE,
         .rasterization_info.frontFace = VK_FRONT_FACE_CLOCKWISE,
-        .rasterization_info.depthBiasEnable = VK_FALSE,
+        .rasterization_info.depthBiasEnable = VK_false,
         .rasterization_info.depthBiasConstantFactor = 0.0f,  /* Optional */
         .rasterization_info.depthBiasClamp = 0.0f,           /* Optional */
         .rasterization_info.depthBiasSlopeFactor = 0.0f,     /* Optional */
 
         .multisample_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-        .multisample_info.sampleShadingEnable = VK_FALSE,
+        .multisample_info.sampleShadingEnable = VK_false,
         .multisample_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
         .multisample_info.minSampleShading = 1.0f,           /* Optional */
         .multisample_info.pSampleMask = NULL,                /* Optional */
-        .multisample_info.alphaToCoverageEnable = VK_FALSE,  /* Optional */
-        .multisample_info.alphaToOneEnable = VK_FALSE,       /* Optional */
+        .multisample_info.alphaToCoverageEnable = VK_false,  /* Optional */
+        .multisample_info.alphaToOneEnable = VK_false,       /* Optional */
 
         .color_blend_attachment.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
             VK_COLOR_COMPONENT_A_BIT,
-        .color_blend_attachment.blendEnable = VK_FALSE,
+        .color_blend_attachment.blendEnable = VK_false,
         .color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,   /* Optional */
         .color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,  /* Optional */
         .color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD,              /* Optional */
@@ -135,7 +135,7 @@ PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
         .color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD,              /* Optional */
 
         .color_blend_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-        .color_blend_info.logicOpEnable = VK_FALSE,
+        .color_blend_info.logicOpEnable = VK_false,
         .color_blend_info.logicOp = VK_LOGIC_OP_COPY,  /* Optional */
         .color_blend_info.attachmentCount = 1,
         .color_blend_info.pAttachments = &config_info.color_blend_attachment,
@@ -145,13 +145,13 @@ PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height) {
         .color_blend_info.blendConstants[3] = 0.0f,  /* Optional */
 
         .depth_stencil_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-        .depth_stencil_info.depthTestEnable = VK_TRUE,
-        .depth_stencil_info.depthWriteEnable = VK_TRUE,
+        .depth_stencil_info.depthTestEnable = VK_true,
+        .depth_stencil_info.depthWriteEnable = VK_true,
         .depth_stencil_info.depthCompareOp = VK_COMPARE_OP_LESS,
-        .depth_stencil_info.depthBoundsTestEnable = VK_FALSE,
+        .depth_stencil_info.depthBoundsTestEnable = VK_false,
         .depth_stencil_info.minDepthBounds = 0.0f,  /* Optional */
         .depth_stencil_info.maxDepthBounds = 1.0f,  /* Optional */
-        .depth_stencil_info.stencilTestEnable = VK_FALSE,
+        .depth_stencil_info.stencilTestEnable = VK_false,
         .depth_stencil_info.front = VK_NULL_HANDLE, /* Optional */
         .depth_stencil_info.back = VK_NULL_HANDLE,   /* Optional */
     };
