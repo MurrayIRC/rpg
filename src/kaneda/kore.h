@@ -92,12 +92,23 @@ extern float math_randf(uint32 index); /* ranged 0 to 1*/
 extern float math_randnf(uint32 index); /* ranged -1 to 1*/
 extern uint math_randi(uint32 index); /* integer version */
 
+/*------- Normie math -------
+This is just math library stuff i need.
+*/
+
+extern float math_deg2rad(float degrees);
+extern float math_rad2deg(float radians);
+
+/*------- Camera-specific math -------
+These are functions that help the camera do shit.
+*/
+
+extern void math_perspective(float *out_mat, float fov, float aspect, float z_near, float z_far);
+extern void math_orthographic(float *out_mat, float fov, float z_near, float z_far);
+extern void math_lookat(float *out_mat, float *vec_eye, float *vec_center, float *vec_up);
 
 /*------- Vector math -------
 These are common functions used in vector math. */
-
-/* replaced sqrt with carmack's inverse sqrt approximation */
-#define math_sqrt sqrt
 
 /* Computes the length of a vector 2D for 32 bit floats.*/
 extern float math_length2d(float *vec);
@@ -147,9 +158,9 @@ Vector math for integer types. */
 /* Integer square root.*/
 extern long math_sqrti(long value);
 /* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considerd to be one. */
-extern boolean math_normalize2di(int *point, int fixed_point_multiplyer);
+extern boolean math_normalize2di(int *point, int fixed_point_multiplier);
 /* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considerd to be one. */
-extern boolean math_normalize3di(int *point, int fixed_point_multiplyer);
+extern boolean math_normalize3di(int *point, int fixed_point_multiplier);
 /* Inter sects two 2d integer lines. */
 extern void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, int *line_b1);
 
@@ -158,7 +169,7 @@ extern void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line
 Matrix operations for 4x4 matrices.*/
 
 /* Clears a 4x4 32 bit float matrix to an identity matrix.*/
-extern void math_matrix_clear(float *matrix);
+extern void math_matrix_identity(float *matrix);
 /* Transforms a 3D point with a 4x4 32 bit float matrix.*/
 extern void math_transform3d(float *output, const float *matrix, const float x, const float y, const float z);
 extern void math_transform_inv3d(float *out, const float *matrix, float x, float y, float z);
@@ -182,16 +193,16 @@ extern void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, f
 These functions let you create a matrix from two points and an optional origin (The origin can be left as NULL). The first vector dominates and the second will be used to determine rotation around the first vector*/
 
 /* Lets you create a 32 bit float 4x4 matrix using the X and Y vector */
-extern void math_matrixxy(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixxy(float *matrix, const float *origin, const float *point_a, const float *point_b);
 /* Lets you create a 32 bit float 4x4 matrix using the X and Z vector */
-extern void math_matrixxz(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixxz(float *matrix, const float *origin, const float *point_a, const float *point_b);
 /* Lets you create a 32 bit float 4x4 matrix using the Y and X vector */
-extern void math_matrixyx(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixyx(float *matrix, const float *origin, const float *point_a, const float *point_b);
 /* Lets you create a 32 bit float 4x4 matrix using the Y and Z vector */
-extern void math_matrixyz(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixyz(float *matrix, const float *origin, const float *point_a, const float *point_b);
 /* Lets you create a 32 bit float 4x4 matrix using the Z and X vector */
-extern void math_matrixzx(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixzx(float *matrix, const float *origin, const float *point_a, const float *point_b);
 /* Lets you create a 32 bit float 4x4 matrix using the Z and Y vector */
-extern void math_matrixzy(float *matrix, const float *origo, const float *point_a, const float *point_b);
+extern void math_matrixzy(float *matrix, const float *origin, const float *point_a, const float *point_b);
 
 #endif

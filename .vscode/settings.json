@@ -28,6 +28,8 @@
 		"type_traits": "c",
 		"xlocnum": "c",
 		"xtr1common": "c",
-		"kore.h": "c"
+		"kore.h": "c",
+		"ios": "c",
+		"xiosbase": "c"
 	}
 }

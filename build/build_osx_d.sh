@@ -20,12 +20,13 @@ inc=(
 # Source files
 src=(
 	${proj_root_dir}/src/main.c
-	${proj_root_dir}/src/app.c
-	${proj_root_dir}/src/window.c
-	${proj_root_dir}/src/shader.c
-	${proj_root_dir}/src/k_mem_debug.c
-	${proj_root_dir}/src/file.c
-	${proj_root_dir}/src/log.c
+	${proj_root_dir}/src/kaneda/app.c
+	${proj_root_dir}/src/kaneda/window.c
+	${proj_root_dir}/src/kaneda/shader.c
+	${proj_root_dir}/src/kaneda/mem_debug.c
+	${proj_root_dir}/src/kaneda/math.c
+	${proj_root_dir}/src/kaneda/file.c
+	${proj_root_dir}/src/kaneda/log.c
 )
 
 fworks=(

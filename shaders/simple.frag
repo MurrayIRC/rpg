@@ -1,7 +1,10 @@
 #version 410 core
 
-out vec3 out_color;
+// Interpolated values from the vertex shaders
+in vec3 fragment_color;
+
+out vec3 color;
 
 void main() {
-    out_color = vec3(1, 0, 0);
+    color = fragment_color;
 }
