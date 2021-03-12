@@ -18,15 +18,13 @@ Renderer *renderer_create(Window *win) {
     renderer->mvp_uniform_id = glGetUniformLocation(renderer->simple_shader->program_id, "mvp");
 
     float projection[16];
-    math_perspective(&projection, math_deg2rad(45.0f), (float)win->width / (float)win->width, 0.1f,
-                     100.0f);
+    math_perspective(&projection, 45.0f, (float)win->width / (float)win->width, 0.1f, 100.0f);
 
     // Or, for an ortho camera :
     // math_orthographic(&projection, 10.0f, 0.0f, 100.0f);
 
     // Camera matrix
     float view[16];
-    math_matrix_identity(&view);
     float eye = {4.0f, 3.0f, -3.0f};   // Camera is at (4,3,-3), in World Space
     float center = {0.0f, 0.0f, 0.0f}; // and looks at the origin
     float up = {0.0f, 1.0f, 0.0f};     // Head is up (set to 0,-1,0 for upside-down)

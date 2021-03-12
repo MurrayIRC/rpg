@@ -42,32 +42,33 @@ void math_perspective(float *out_mat, float fov, float aspect, float z_near, flo
     assert(aspect != 0);
     assert(z_far != z_near);
 
-    float rad = fov;
-    float tan_half_fov = (float)tan(rad / 2.0f);
+    float q = 1.0f / (float)tan(math_deg2rad(0.5f * fov));
+    float a = q / aspect;
+    float b = (z_near + z_far) / (z_near - z_far);
+    float c = (2.0f * z_near * z_far) / (z_near - z_far);
 
-    out_mat[0] = 1.0f / (aspect * tan_half_fov);
-    out_mat[5] = 1.0f / (tan_half_fov);
-    out_mat[10] = -(z_far + z_near) / (z_far - z_near);
-    out_mat[14] = -1.0f;
-    out_mat[11] = -(2.0f * z_far * z_near) / (z_far - z_near);
+    out_mat[0 + 0 * 4] = a;
+    out_mat[1 + 1 * 4] = q;
+    out_mat[2 + 2 * 4] = b;
+    out_mat[2 + 3 * 4] = c;
+    out_mat[3 + 2 * 4] = -1.0f;
 }
 
 void math_orthographic(float *out_mat, float fov, float z_near, float z_far) {
     out_mat[0] = 2.0f / (fov - (-fov));
     out_mat[5] = 2.0f / (fov - (-fov));
     out_mat[10] = -2.0f / (z_far - z_near);
-
-    // HERE'S WHERE IT GETS WEIRD
     out_mat[3] = -(fov + (-fov)) / (fov - (-fov));
     out_mat[7] = -(fov + (-fov)) / (fov - (-fov));
     out_mat[11] = -(z_far + z_near) / (z_far - z_near);
 }
 
-void math_lookat(float *out_mat, float *vec_eye, float *vec_center, float *vec_up) {
-    float f[3];
-    f[0] = vec_center[0] - vec_eye[0];
-    f[1] = vec_center[1] - vec_eye[1];
-    f[2] = vec_center[2] - vec_eye[2];
+void math_lookat(float *out_mat, float *vec_pos, float *vec_target, float *vec_up) {
+    float f[3] = {
+        vec_target[0] - vec_pos[0],
+        vec_target[1] - vec_pos[1],
+        vec_target[2] - vec_pos[2]
+    };
     math_normalize3d(&f);
 
     float s[3];
@@ -77,20 +78,22 @@ void math_lookat(float *out_mat, float *vec_eye, float *vec_center, float *vec_u
     float u[3];
     math_cross3d(&u, s, f);
 
-    out_mat[0] = s[0];
+    math_matrix_identity(&out_mat);
+    out_mat[0 * 4 + 0] = s[0];
+    out_mat[1 * 4 + 0] = s[1];
+    out_mat[2 * 4 + 0] = s[2];
 
-    // LET'S GET WEIRD
-    out_mat[1] = s[1];
-    out_mat[2] = s[2];
-    out_mat[4] = u[0];
-    out_mat[5] = u[1];
-    out_mat[6] = u[2];
-    out_mat[8] =-f[0];
-    out_mat[9] =-f[1];
-    out_mat[10] = -f[2];
-    out_mat[3] = -math_dot3d(s, vec_eye);
-    out_mat[7] = -math_dot3d(u, vec_eye);
-    out_mat[11] = math_dot3d(f, vec_eye);
+    out_mat[0 * 4 + 1] = u[0];
+    out_mat[1 * 4 + 1] = u[1];
+    out_mat[2 * 4 + 1] = u[2];
+
+    out_mat[0 * 4 + 2] = -f[0];
+    out_mat[1 * 4 + 2] = -f[1];
+    out_mat[2 * 4 + 2] = -f[2];
+
+    out_mat[3 * 4 + 0] = -math_dot3d(s, vec_pos);
+    out_mat[3 * 4 + 1] = -math_dot3d(u, vec_pos);
+    out_mat[3 * 4 + 2] = math_dot3d(f, vec_pos); 
 }
 
 float math_length2d(float *vec) {
@@ -264,7 +267,7 @@ long math_sqrti(long value) {
     return root;
 }
 
-boolean math_normalize2di(int *point, int fixed_point_multiplier) {
+bool math_normalize2di(int *point, int fixed_point_multiplier) {
     int length = math_sqrti(point[0] * point[0] + point[1] * point[1]);
     if (length != 0) {
         point[0] = (point[0] * fixed_point_multiplier) / length;
@@ -274,7 +277,7 @@ boolean math_normalize2di(int *point, int fixed_point_multiplier) {
     return 0;
 }
 
-boolean math_normalize3di(int *point, int fixed_point_multiplier) {
+bool math_normalize3di(int *point, int fixed_point_multiplier) {
     int length = math_sqrti(point[0] * point[0] + point[1] * point[1] + point[2] * point[2]);
     if (length != 0) {
         point[0] = (point[0] * fixed_point_multiplier) / length;

@@ -105,7 +105,7 @@ These are functions that help the camera do shit.
 
 extern void math_perspective(float *out_mat, float fov, float aspect, float z_near, float z_far);
 extern void math_orthographic(float *out_mat, float fov, float z_near, float z_far);
-extern void math_lookat(float *out_mat, float *vec_eye, float *vec_center, float *vec_up);
+extern void math_lookat(float *out_mat, float *vec_pos, float *vec_target, float *vec_up);
 
 /*------- Vector math -------
 These are common functions used in vector math. */
@@ -158,9 +158,9 @@ Vector math for integer types. */
 /* Integer square root.*/
 extern long math_sqrti(long value);
 /* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considerd to be one. */
-extern boolean math_normalize2di(int *point, int fixed_point_multiplier);
+extern bool math_normalize2di(int *point, int fixed_point_multiplier);
 /* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considerd to be one. */
-extern boolean math_normalize3di(int *point, int fixed_point_multiplier);
+extern bool math_normalize3di(int *point, int fixed_point_multiplier);
 /* Inter sects two 2d integer lines. */
 extern void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, int *line_b1);
 
