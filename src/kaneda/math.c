@@ -1,4 +1,5 @@
 #include "kore.h"
+#include "log.h"
 #include <assert.h>
 #include <math.h>
 
@@ -7,9 +8,9 @@ float math_sqrt(float number) {
     float x, y;
     x = number * 0.5;
     y = number;
-    i = * (int *) &y;
+    i = *(int *)&y;
     i = 0x5f3759df - (i >> 1);
-    y = * (float *) &i;
+    y = *(float *)&i;
     y = y * (1.5 - (x * y * y));
     y = y * (1.5 - (x * y * y));
     return number * y;
@@ -17,12 +18,16 @@ float math_sqrt(float number) {
 
 float math_randf(uint32 index) {
     index = (index << 13) ^ index;
-    return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f) * 0.5f;
+    return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) /
+            1073741824.0f) *
+           0.5f;
 }
 
 float math_randnf(uint32 index) {
     index = (index << 13) ^ index;
-    return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f) - 1.0f;
+    return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) /
+            1073741824.0f) -
+           1.0f;
 }
 
 uint math_randi(uint32 index) {
@@ -54,22 +59,34 @@ void math_perspective(float *out_mat, float fov, float aspect, float z_near, flo
     out_mat[3 + 2 * 4] = -1.0f;
 }
 
-void math_orthographic(float *out_mat, float fov, float z_near, float z_far) {
-    out_mat[0] = 2.0f / (fov - (-fov));
-    out_mat[5] = 2.0f / (fov - (-fov));
-    out_mat[10] = -2.0f / (z_far - z_near);
-    out_mat[3] = -(fov + (-fov)) / (fov - (-fov));
-    out_mat[7] = -(fov + (-fov)) / (fov - (-fov));
-    out_mat[11] = -(z_far + z_near) / (z_far - z_near);
+void math_orthographic(float *out_mat, float left, float right, float bottom, float top,
+                       float z_near, float z_far) {
+    math_matrix_identity(&out_mat);
+
+    // Main diagonal
+    out_mat[0 + 0 * 4] = 2.0f / (right - left);
+    out_mat[1 + 1 * 4] = 2.0f / (top - bottom);
+    out_mat[2 + 2 * 4] = -2.0f / (z_far - z_near);
+
+    // Last column
+    out_mat[0 + 3 * 4] = -(right + left) / (right - left);
+    out_mat[1 + 3 * 4] = -(top + bottom) / (top - bottom);
+    out_mat[2 + 3 * 4] = -(z_far + z_near) / (z_far - z_near);
+
+    // out_mat[0] = 2.0f / (fov - (-fov));
+    // out_mat[5] = 2.0f / (fov - (-fov));
+    // out_mat[10] = -2.0f / (z_far - z_near);
+    // out_mat[3] = -(fov + (-fov)) / (fov - (-fov));
+    // out_mat[7] = -(fov + (-fov)) / (fov - (-fov));
+    // out_mat[11] = -(z_far + z_near) / (z_far - z_near);
 }
 
 void math_lookat(float *out_mat, float *vec_pos, float *vec_target, float *vec_up) {
-    float f[3] = {
-        vec_target[0] - vec_pos[0],
-        vec_target[1] - vec_pos[1],
-        vec_target[2] - vec_pos[2]
-    };
+    float f[3] = {vec_target[0] - vec_pos[0], vec_target[1] - vec_pos[1],
+                  vec_target[2] - vec_pos[2]};
     math_normalize3d(&f);
+
+    log_info("Hey!\n");
 
     float s[3];
     math_cross3d(&s, f, vec_up);
@@ -93,7 +110,7 @@ void math_lookat(float *out_mat, float *vec_pos, float *vec_target, float *vec_u
 
     out_mat[3 * 4 + 0] = -math_dot3d(s, vec_pos);
     out_mat[3 * 4 + 1] = -math_dot3d(u, vec_pos);
-    out_mat[3 * 4 + 2] = math_dot3d(f, vec_pos); 
+    out_mat[3 * 4 + 2] = math_dot3d(f, vec_pos);
 }
 
 float math_length2d(float *vec) {
@@ -119,7 +136,7 @@ float math_distance3d(float *a, float *b) {
     return math_sqrt(tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2]);
 }
 
-float math_dot2d(float *a, float *b){
+float math_dot2d(float *a, float *b) {
     return a[0] * b[0] + a[1] * b[1];
 }
 
@@ -218,29 +235,32 @@ void math_project2d(float *output, float *plane_pos, float *normal, float *pos, 
 }
 
 void math_project3d(float *output, float *plane_pos, float *normal, float *pos, float *vector) {
-    float f = normal[0] * (plane_pos[0] - pos[0]) + normal[1] * (plane_pos[1] - pos[1]) + normal[2] * (plane_pos[2] - pos[2]);
+    float f = normal[0] * (plane_pos[0] - pos[0]) + normal[1] * (plane_pos[1] - pos[1]) +
+              normal[2] * (plane_pos[2] - pos[2]);
     f /= normal[0] * vector[0] + normal[1] * vector[1] + normal[2] * vector[2];
     output[0] = pos[0] + vector[0] * f;
     output[1] = pos[1] + vector[1] * f;
     output[2] = pos[2] + vector[2] * f;
 }
 
-void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line_b0, float *line_b1) {
-    output[0] = (line_a0[0] * line_a1[1] - line_a0[1] * line_a1[0])	* (line_b0[0] - line_b1[0]) - 
-                (line_b0[0] * line_b1[1] - line_b0[1] * line_b1[0])	* (line_a0[0] - line_a1[0]);
-    output[0] /= (line_a0[0] - line_a1[0]) * (line_b0[1] - line_b1[1]) - (line_a0[1] - line_a1[1]) * (line_b0[0] - line_b1[0]);
-    output[1] = (line_a0[0] * line_a1[1] - line_a0[1] * line_a1[0])	* (line_b0[1] - line_b1[1]) - 
-                (line_b0[0] * line_b1[1] - line_b0[1] * line_b1[0])	* (line_a0[1] - line_a1[1]);
-    output[1] /= (line_a0[0] - line_a1[0]) * (line_b0[1] - line_b1[1]) - (line_a0[1] - line_a1[1]) * (line_b0[0] - line_b1[0]);
+void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line_b0,
+                      float *line_b1) {
+    output[0] = (line_a0[0] * line_a1[1] - line_a0[1] * line_a1[0]) * (line_b0[0] - line_b1[0]) -
+                (line_b0[0] * line_b1[1] - line_b0[1] * line_b1[0]) * (line_a0[0] - line_a1[0]);
+    output[0] /= (line_a0[0] - line_a1[0]) * (line_b0[1] - line_b1[1]) -
+                 (line_a0[1] - line_a1[1]) * (line_b0[0] - line_b1[0]);
+    output[1] = (line_a0[0] * line_a1[1] - line_a0[1] * line_a1[0]) * (line_b0[1] - line_b1[1]) -
+                (line_b0[0] * line_b1[1] - line_b0[1] * line_b1[0]) * (line_a0[1] - line_a1[1]);
+    output[1] /= (line_a0[0] - line_a1[0]) * (line_b0[1] - line_b1[1]) -
+                 (line_a0[1] - line_a1[1]) * (line_b0[0] - line_b1[0]);
 }
 
-#define sqrt_step(shift) \
-    if ((0x40000000l >> shift) + root <= value) {       \
-        value -= (0x40000000l >> shift) + root;         \
-        root = (root >> 1) | (0x40000000l >> shift);    \
-    }                                                   \
-    else {                                              \
-        root = root >> 1;                               \
+#define sqrt_step(shift)                                                                           \
+    if ((0x40000000l >> shift) + root <= value) {                                                  \
+        value -= (0x40000000l >> shift) + root;                                                    \
+        root = (root >> 1) | (0x40000000l >> shift);                                               \
+    } else {                                                                                       \
+        root = root >> 1;                                                                          \
     }
 
 long math_sqrti(long value) {
@@ -298,26 +318,30 @@ void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, in
     line64_b0[1] = (int64)line_b0[1];
     line64_b1[0] = (int64)line_b1[0];
     line64_b1[1] = (int64)line_b1[1];
-    i = (line64_a0[0] - line64_a1[0]) * (line64_b0[1] - line64_b1[1]) - (line64_a0[1] - line64_a1[1]) * (line64_b0[0] - line64_b1[0]);
-    if (i == 0)
-    {
+    i = (line64_a0[0] - line64_a1[0]) * (line64_b0[1] - line64_b1[1]) -
+        (line64_a0[1] - line64_a1[1]) * (line64_b0[0] - line64_b1[0]);
+    if (i == 0) {
         output[0] = (line_a0[0] + line_a1[0]) / 2;
         output[1] = (line_a0[1] + line_a1[1]) / 2;
         return;
     }
-    tmp = (line64_a0[0] * line64_a1[1] - line64_a0[1] * line64_a1[0])	* (line64_b0[0] - line64_b1[0]) - 
-                (line64_b0[0] * line64_b1[1] - line64_b0[1] * line64_b1[0])	* (line64_a0[0] - line64_a1[0]);
+    tmp =
+        (line64_a0[0] * line64_a1[1] - line64_a0[1] * line64_a1[0]) *
+            (line64_b0[0] - line64_b1[0]) -
+        (line64_b0[0] * line64_b1[1] - line64_b0[1] * line64_b1[0]) * (line64_a0[0] - line64_a1[0]);
     tmp /= i;
     output[0] = (int)tmp;
-    i = (line64_a0[0] - line64_a1[0]) * (line64_b0[1] - line64_b1[1]) - (line64_a0[1] - line64_a1[1]) * (line64_b0[0] - line64_b1[0]);
-    if (i == 0)
-    {
+    i = (line64_a0[0] - line64_a1[0]) * (line64_b0[1] - line64_b1[1]) -
+        (line64_a0[1] - line64_a1[1]) * (line64_b0[0] - line64_b1[0]);
+    if (i == 0) {
         output[0] = (line_a0[0] + line_a1[0]) / 2;
         output[1] = (line_a0[1] + line_a1[1]) / 2;
         return;
     }
-    tmp = (line64_a0[0] * line64_a1[1] - line64_a0[1] * line64_a1[0])	* (line64_b0[1] - line64_b1[1]) - 
-                (line64_b0[0] * line64_b1[1] - line64_b0[1] * line64_b1[0])	* (line64_a0[1] - line64_a1[1]);
+    tmp =
+        (line64_a0[0] * line64_a1[1] - line64_a0[1] * line64_a1[0]) *
+            (line64_b0[1] - line64_b1[1]) -
+        (line64_b0[0] * line64_b1[1] - line64_b0[1] * line64_b1[0]) * (line64_a0[1] - line64_a1[1]);
     tmp /= i;
     output[1] = (int)tmp;
 }
@@ -341,7 +365,8 @@ void math_matrix_identity(float *matrix) {
     matrix[15] = 1;
 }
 
-void math_transform3d(float *output, const float *matrix, const float x, const float y, const float z) {
+void math_transform3d(float *output, const float *matrix, const float x, const float y,
+                      const float z) {
     output[0] = (matrix[0] * x) + (matrix[4] * y) + (matrix[8] * z) + matrix[12];
     output[1] = (matrix[1] * x) + (matrix[5] * y) + (matrix[9] * z) + matrix[13];
     output[2] = (matrix[2] * x) + (matrix[6] * y) + (matrix[10] * z) + matrix[14];
@@ -356,7 +381,8 @@ void math_transform_inv3d(float *out, const float *matrix, float x, float y, flo
     out[2] = (matrix[8] * x) + (matrix[9] * y) + (matrix[10] * z);
 }
 
-void math_transform4d(float *output, const float *matrix, const float x, const float y, const float z, const double w) {
+void math_transform4d(float *output, const float *matrix, const float x, const float y,
+                      const float z, const double w) {
     output[0] = (matrix[0] * x) + (matrix[4] * y) + (matrix[8] * z) + (matrix[12] * w);
     output[1] = (matrix[1] * x) + (matrix[5] * y) + (matrix[9] * z) + (matrix[13] * w);
     output[2] = (matrix[2] * x) + (matrix[6] * y) + (matrix[10] * z) + (matrix[14] * w);
@@ -386,26 +412,58 @@ void math_matrix_multiply(float *output, const float *a, const float *b) {
 }
 
 void math_matrix_reverse4x4(float *output, const float *matrix) {
-    output[0] = matrix[5] * matrix[10] * matrix[15] + matrix[6] * matrix[11] * matrix[13] + matrix[7] * matrix[9] * matrix[14] - matrix[5] * matrix[11] * matrix[14] - matrix[6] * matrix[9] * matrix[15] - matrix[7] * matrix[10] * matrix[13];
-    output[1] = matrix[1] * matrix[11] * matrix[14] + matrix[2] * matrix[9] * matrix[15] + matrix[3] * matrix[10] * matrix[13] - matrix[1] * matrix[10] * matrix[15] - matrix[2] * matrix[11] * matrix[13] - matrix[3] * matrix[9] * matrix[14];
-    output[2] = matrix[1] * matrix[6] * matrix[15] + matrix[2] * matrix[7] * matrix[13] + matrix[3] * matrix[5] * matrix[14] - matrix[1] * matrix[7] * matrix[14] - matrix[2] * matrix[5] * matrix[15] - matrix[3] * matrix[6] * matrix[13];
-    output[3] = matrix[1] * matrix[7] * matrix[10] + matrix[2] * matrix[5] * matrix[11] + matrix[3] * matrix[6] * matrix[9] - matrix[1] * matrix[6] * matrix[11] - matrix[2] * matrix[7] * matrix[9] - matrix[3] * matrix[5] * matrix[10];
-    output[4] = matrix[4] * matrix[11] * matrix[14] + matrix[6] * matrix[8] * matrix[15] + matrix[7] * matrix[10] * matrix[12] - matrix[4] * matrix[10] * matrix[15] - matrix[6] * matrix[11] * matrix[12] - matrix[7] * matrix[8] * matrix[14];
-    output[5] = matrix[0] * matrix[10] * matrix[15] + matrix[2] * matrix[11] * matrix[12] + matrix[3] * matrix[8] * matrix[14] - matrix[0] * matrix[11] * matrix[14] - matrix[2] * matrix[8] * matrix[15] - matrix[3] * matrix[10] * matrix[12];
-    output[6] = matrix[0] * matrix[7] * matrix[14] + matrix[2] * matrix[4] * matrix[15] + matrix[3] * matrix[6] * matrix[12] - matrix[0] * matrix[6] * matrix[15] - matrix[2] * matrix[7] * matrix[12] - matrix[3] * matrix[4] * matrix[14];
-    output[7] = matrix[0] * matrix[6] * matrix[11] + matrix[2] * matrix[7] * matrix[8] + matrix[3] * matrix[4] * matrix[10] - matrix[0] * matrix[7] * matrix[10] - matrix[2] * matrix[4] * matrix[11] - matrix[3] * matrix[6] * matrix[8];
-    output[8] = matrix[4] * matrix[9] * matrix[15] + matrix[5] * matrix[11] * matrix[12] + matrix[7] * matrix[8] * matrix[13] - matrix[4] * matrix[11] * matrix[13] - matrix[5] * matrix[8] * matrix[15] - matrix[7] * matrix[9] * matrix[12];
-    output[9] = matrix[0] * matrix[11] * matrix[13] + matrix[1] * matrix[8] * matrix[15] + matrix[3] * matrix[9] * matrix[12] - matrix[0] * matrix[9] * matrix[15] - matrix[1] * matrix[11] * matrix[12] - matrix[3] * matrix[8] * matrix[13];
-    output[10] = matrix[0] * matrix[5] * matrix[15] + matrix[1] * matrix[7] * matrix[12] + matrix[3] * matrix[4] * matrix[13] - matrix[0] * matrix[7] * matrix[13] - matrix[1] * matrix[4] * matrix[15] - matrix[3] * matrix[5] * matrix[12];
-    output[11] = matrix[0] * matrix[7] * matrix[9] + matrix[1] * matrix[4] * matrix[11] + matrix[3] * matrix[5] * matrix[8] - matrix[0] * matrix[5] * matrix[11] - matrix[1] * matrix[7] * matrix[8] - matrix[3] * matrix[4] * matrix[9];
-    output[12] = matrix[4] * matrix[10] * matrix[13] + matrix[5] * matrix[8] * matrix[14] + matrix[6] * matrix[9] * matrix[12] - matrix[4] * matrix[9] * matrix[14] - matrix[5] * matrix[10] * matrix[12] - matrix[6] * matrix[8] * matrix[13];
-    output[13] = matrix[0] * matrix[9] * matrix[14] + matrix[1] * matrix[10] * matrix[12] + matrix[2] * matrix[8] * matrix[13] - matrix[0] * matrix[10] * matrix[13] - matrix[1] * matrix[8] * matrix[14] - matrix[2] * matrix[9] * matrix[12];
-    output[14] = matrix[0] * matrix[6] * matrix[13] + matrix[1] * matrix[4] * matrix[14] + matrix[2] * matrix[5] * matrix[12] - matrix[0] * matrix[5] * matrix[14] - matrix[1] * matrix[6] * matrix[12] - matrix[2] * matrix[4] * matrix[13];
-    output[15] = matrix[0] * matrix[5] * matrix[10] + matrix[1] * matrix[6] * matrix[8] + matrix[2] * matrix[4] * matrix[9] - matrix[0] * matrix[6] * matrix[9] - matrix[1] * matrix[4] * matrix[10] - matrix[2] * matrix[5] * matrix[8];
+    output[0] = matrix[5] * matrix[10] * matrix[15] + matrix[6] * matrix[11] * matrix[13] +
+                matrix[7] * matrix[9] * matrix[14] - matrix[5] * matrix[11] * matrix[14] -
+                matrix[6] * matrix[9] * matrix[15] - matrix[7] * matrix[10] * matrix[13];
+    output[1] = matrix[1] * matrix[11] * matrix[14] + matrix[2] * matrix[9] * matrix[15] +
+                matrix[3] * matrix[10] * matrix[13] - matrix[1] * matrix[10] * matrix[15] -
+                matrix[2] * matrix[11] * matrix[13] - matrix[3] * matrix[9] * matrix[14];
+    output[2] = matrix[1] * matrix[6] * matrix[15] + matrix[2] * matrix[7] * matrix[13] +
+                matrix[3] * matrix[5] * matrix[14] - matrix[1] * matrix[7] * matrix[14] -
+                matrix[2] * matrix[5] * matrix[15] - matrix[3] * matrix[6] * matrix[13];
+    output[3] = matrix[1] * matrix[7] * matrix[10] + matrix[2] * matrix[5] * matrix[11] +
+                matrix[3] * matrix[6] * matrix[9] - matrix[1] * matrix[6] * matrix[11] -
+                matrix[2] * matrix[7] * matrix[9] - matrix[3] * matrix[5] * matrix[10];
+    output[4] = matrix[4] * matrix[11] * matrix[14] + matrix[6] * matrix[8] * matrix[15] +
+                matrix[7] * matrix[10] * matrix[12] - matrix[4] * matrix[10] * matrix[15] -
+                matrix[6] * matrix[11] * matrix[12] - matrix[7] * matrix[8] * matrix[14];
+    output[5] = matrix[0] * matrix[10] * matrix[15] + matrix[2] * matrix[11] * matrix[12] +
+                matrix[3] * matrix[8] * matrix[14] - matrix[0] * matrix[11] * matrix[14] -
+                matrix[2] * matrix[8] * matrix[15] - matrix[3] * matrix[10] * matrix[12];
+    output[6] = matrix[0] * matrix[7] * matrix[14] + matrix[2] * matrix[4] * matrix[15] +
+                matrix[3] * matrix[6] * matrix[12] - matrix[0] * matrix[6] * matrix[15] -
+                matrix[2] * matrix[7] * matrix[12] - matrix[3] * matrix[4] * matrix[14];
+    output[7] = matrix[0] * matrix[6] * matrix[11] + matrix[2] * matrix[7] * matrix[8] +
+                matrix[3] * matrix[4] * matrix[10] - matrix[0] * matrix[7] * matrix[10] -
+                matrix[2] * matrix[4] * matrix[11] - matrix[3] * matrix[6] * matrix[8];
+    output[8] = matrix[4] * matrix[9] * matrix[15] + matrix[5] * matrix[11] * matrix[12] +
+                matrix[7] * matrix[8] * matrix[13] - matrix[4] * matrix[11] * matrix[13] -
+                matrix[5] * matrix[8] * matrix[15] - matrix[7] * matrix[9] * matrix[12];
+    output[9] = matrix[0] * matrix[11] * matrix[13] + matrix[1] * matrix[8] * matrix[15] +
+                matrix[3] * matrix[9] * matrix[12] - matrix[0] * matrix[9] * matrix[15] -
+                matrix[1] * matrix[11] * matrix[12] - matrix[3] * matrix[8] * matrix[13];
+    output[10] = matrix[0] * matrix[5] * matrix[15] + matrix[1] * matrix[7] * matrix[12] +
+                 matrix[3] * matrix[4] * matrix[13] - matrix[0] * matrix[7] * matrix[13] -
+                 matrix[1] * matrix[4] * matrix[15] - matrix[3] * matrix[5] * matrix[12];
+    output[11] = matrix[0] * matrix[7] * matrix[9] + matrix[1] * matrix[4] * matrix[11] +
+                 matrix[3] * matrix[5] * matrix[8] - matrix[0] * matrix[5] * matrix[11] -
+                 matrix[1] * matrix[7] * matrix[8] - matrix[3] * matrix[4] * matrix[9];
+    output[12] = matrix[4] * matrix[10] * matrix[13] + matrix[5] * matrix[8] * matrix[14] +
+                 matrix[6] * matrix[9] * matrix[12] - matrix[4] * matrix[9] * matrix[14] -
+                 matrix[5] * matrix[10] * matrix[12] - matrix[6] * matrix[8] * matrix[13];
+    output[13] = matrix[0] * matrix[9] * matrix[14] + matrix[1] * matrix[10] * matrix[12] +
+                 matrix[2] * matrix[8] * matrix[13] - matrix[0] * matrix[10] * matrix[13] -
+                 matrix[1] * matrix[8] * matrix[14] - matrix[2] * matrix[9] * matrix[12];
+    output[14] = matrix[0] * matrix[6] * matrix[13] + matrix[1] * matrix[4] * matrix[14] +
+                 matrix[2] * matrix[5] * matrix[12] - matrix[0] * matrix[5] * matrix[14] -
+                 matrix[1] * matrix[6] * matrix[12] - matrix[2] * matrix[4] * matrix[13];
+    output[15] = matrix[0] * matrix[5] * matrix[10] + matrix[1] * matrix[6] * matrix[8] +
+                 matrix[2] * matrix[4] * matrix[9] - matrix[0] * matrix[6] * matrix[9] -
+                 matrix[1] * matrix[4] * matrix[10] - matrix[2] * matrix[5] * matrix[8];
 }
 
 void math_quaternion_to_matrix(float *matrix, float x, float y, float z, float w) {
-    float xx, xy, xz, xw, yy, yz, yw, zz, zw; 
+    float xx, xy, xz, xw, yy, yz, yw, zz, zw;
     xx = sqrt(x * x + y * y + z * z + w * w);
     x /= xx;
     y /= xx;
@@ -420,47 +478,42 @@ void math_quaternion_to_matrix(float *matrix, float x, float y, float z, float w
     yw = y * w;
     zz = z * z;
     zw = z * w;
-    matrix[0]  = 1 - 2 * (yy + zz);
-    matrix[1]  = 2 * (xy - zw);
-    matrix[2]  = 2 * (xz + yw);
-    matrix[4]  = 2 * (xy + zw);
-    matrix[5]  = 1 - 2 * (xx + zz);
-    matrix[6]  = 2 * (yz - xw);
-    matrix[8]  = 2 * (xz - yw);
-    matrix[9]  = 2 * (yz + xw);
+    matrix[0] = 1 - 2 * (yy + zz);
+    matrix[1] = 2 * (xy - zw);
+    matrix[2] = 2 * (xz + yw);
+    matrix[4] = 2 * (xy + zw);
+    matrix[5] = 1 - 2 * (xx + zz);
+    matrix[6] = 2 * (yz - xw);
+    matrix[8] = 2 * (xz - yw);
+    matrix[9] = 2 * (yz + xw);
     matrix[10] = 1 - 2 * (xx + yy);
-    matrix[3]  = matrix[7] = matrix[11] = matrix[12] = matrix[13] = matrix[14] = 0;
+    matrix[3] = matrix[7] = matrix[11] = matrix[12] = matrix[13] = matrix[14] = 0;
     matrix[15] = 1;
 }
 
 void math_matrix_to_quaternion(float *quaternion, float *matrix) {
     float trace, s;
     trace = matrix[0 * 4 + 0] + matrix[1 * 4 + 1] + matrix[2 * 4 + 2];
-    if (trace > 0.0f) 
-    {
+    if (trace > 0.0f) {
         s = 0.5f / sqrt(trace + 1.0f);
         quaternion[3] = 0.25f / s;
         quaternion[0] = (matrix[2 * 4 + 1] - matrix[1 * 4 + 2]) * s;
         quaternion[1] = (matrix[0 * 4 + 2] - matrix[2 * 4 + 0]) * s;
         quaternion[2] = (matrix[1 * 4 + 0] - matrix[0 * 4 + 1]) * s;
-    }else 
-    {
-        if (matrix[0 * 4 + 0] > matrix[1 * 4 + 1] && matrix[0 * 4 + 0] > matrix[2 * 4 + 2]) 
-        {
+    } else {
+        if (matrix[0 * 4 + 0] > matrix[1 * 4 + 1] && matrix[0 * 4 + 0] > matrix[2 * 4 + 2]) {
             s = 2.0f * sqrt(1.0f + matrix[0 * 4 + 0] - matrix[1 * 4 + 1] - matrix[2 * 4 + 2]);
             quaternion[3] = (matrix[2 * 4 + 1] - matrix[1 * 4 + 2]) / s;
             quaternion[0] = 0.25f * s;
             quaternion[1] = (matrix[0 * 4 + 1] + matrix[1 * 4 + 0]) / s;
             quaternion[2] = (matrix[0 * 4 + 2] + matrix[2 * 4 + 0]) / s;
-        }else if (matrix[1 * 4 + 1] > matrix[2 * 4 + 2]) 
-        {
+        } else if (matrix[1 * 4 + 1] > matrix[2 * 4 + 2]) {
             s = 2.0f * sqrt(1.0f + matrix[1 * 4 + 1] - matrix[0 * 4 + 0] - matrix[2 * 4 + 2]);
             quaternion[3] = (matrix[0 * 4 + 2] - matrix[2 * 4 + 0]) / s;
             quaternion[0] = (matrix[0 * 4 + 1] + matrix[1 * 4 + 0]) / s;
             quaternion[1] = 0.25f * s;
             quaternion[2] = (matrix[1 * 4 + 2] + matrix[2 * 4 + 1]) / s;
-        }else 
-        {
+        } else {
             s = 2.0f * sqrt(1.0f + matrix[2 * 4 + 2] - matrix[0 * 4 + 0] - matrix[1 * 4 + 1]);
             quaternion[3] = (matrix[1 * 4 + 0] - matrix[0 * 4 + 1]) / s;
             quaternion[0] = (matrix[0 * 4 + 2] + matrix[2 * 4 + 0]) / s;
@@ -468,14 +521,16 @@ void math_matrix_to_quaternion(float *quaternion, float *matrix) {
             quaternion[2] = 0.25f * s;
         }
     }
-    s = sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
+    s = sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] +
+             quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
     quaternion[0] /= s;
     quaternion[1] /= s;
     quaternion[2] /= s;
     quaternion[3] /= s;
 }
 
-void math_matrix_to_pos_quaternion_scale(float *matrix, float *pos, float *quaternion, float *scale) {
+void math_matrix_to_pos_quaternion_scale(float *matrix, float *pos, float *quaternion,
+                                         float *scale) {
     math_matrix_to_quaternion(quaternion, matrix);
     pos[0] = matrix[12];
     pos[1] = matrix[13];
@@ -485,7 +540,8 @@ void math_matrix_to_pos_quaternion_scale(float *matrix, float *pos, float *quate
     scale[2] = math_length3d(&matrix[8]);
 }
 
-void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, float *scale, float *matrix) {
+void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, float *scale,
+                                         float *matrix) {
     math_quaternion_to_matrix(matrix, quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
     matrix[12] = pos[0];
     matrix[13] = pos[1];

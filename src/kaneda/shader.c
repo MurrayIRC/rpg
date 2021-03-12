@@ -94,6 +94,10 @@ char *shader_read_from_file(const char *path) {
     return code;
 }
 
+void shader_use(Shader *shader) {
+    glUseProgram(shader->program_id);
+}
+
 void shader_destroy(Shader *shader) {
     glDeleteProgram(shader->program_id);
     free(shader->vert_code);

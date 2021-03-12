@@ -9,13 +9,14 @@
 typedef struct {
     int32 width;
     int32 height;
-    
-    const char* name;
-    GLFWwindow* glfw_window;
+
+    const char *name;
+    GLFWwindow *glfw_window;
 } Window;
 
-Window *window_create(const int32 w, const int32 h, const char* name);
-bool window_should_close(Window *window);
+Window *window_create(const int32 w, const int32 h, const char *name);
+void window_process_input(Window *window);
+void window_framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void window_destroy(Window *window);
 
 #endif

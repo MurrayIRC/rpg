@@ -6,10 +6,9 @@
 #include "window.h"
 
 typedef struct {
-    GLuint vertex_array_id;
-    GLuint vertex_buffer;
-    GLuint color_buffer;
     Shader *simple_shader;
+    GLuint vao;
+    GLuint vbo;
 
     GLuint mvp_uniform_id;
     float mvp[16];

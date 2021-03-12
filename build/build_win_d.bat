@@ -8,7 +8,6 @@ del *.exe /s
 set proj_name=rpg
 set proj_root_dir=C:/work/c/rpg
 
-set glew_lib=C:/work/c/libraries/glew/lib/Release/x64
 set glfw_lib=C:/work/c/libraries/glfw/lib-static-ucrt
 
 set flags=^
@@ -17,13 +16,13 @@ set flags=^
 
 :: Include directories
 set inc=^
-	-I${proj_root_dir}/external^
-	-IC:/work/c/libraries/glfw/include^
-	-IC:/work/c/libraries/glew/include
+	-I%proj_root_dir%/external^
+	-IC:/work/c/libraries/glfw/include
 
 :: Source files
 set src=^
 	%proj_root_dir%/src/main.c^
+	%proj_root_dir%/src/gl.c^
 	%proj_root_dir%/src/kaneda/app.c^
 	%proj_root_dir%/src/kaneda/window.c^
 	%proj_root_dir%/src/kaneda/renderer.c^
@@ -40,9 +39,7 @@ set libs=^
 	-lshell32^
 	-lgdi32^
 	-lAdvapi32^
-	-L%glew_lib%^
 	-L%glfw_lib%^
-	-lglew32^
 	-lglfw3
 
 :: Build

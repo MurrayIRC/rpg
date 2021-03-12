@@ -20,6 +20,7 @@ inc=(
 # Source files
 src=(
 	${proj_root_dir}/src/main.c
+	${proj_root_dir}/src/gl.c
 	${proj_root_dir}/src/kaneda/app.c
 	${proj_root_dir}/src/kaneda/window.c
 	${proj_root_dir}/src/kaneda/shader.c
@@ -32,7 +33,6 @@ src=(
 
 fworks=(
 	-lglfw
-	-lglew
 	-framework OpenGL
 	-framework CoreFoundation 
 	-framework CoreVideo 
