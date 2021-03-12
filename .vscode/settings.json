@@ -30,6 +30,7 @@
 		"xtr1common": "c",
 		"kore.h": "c",
 		"ios": "c",
-		"xiosbase": "c"
+		"xiosbase": "c",
+		"renderer.h": "c"
 	}
 }

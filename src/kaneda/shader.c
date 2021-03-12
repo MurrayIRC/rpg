@@ -33,7 +33,7 @@ Shader *shader_create(const char *vert_path, const char *frag_path) {
     glGetShaderiv(vert_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vert_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if (info_log_length > 0) {
-        const char* vert_shader_error_msg = malloc(sizeof(const char*) * (info_log_length + 1));
+        const char *vert_shader_error_msg = malloc(sizeof(const char *) * (info_log_length + 1));
         glGetShaderInfoLog(vert_shader_id, info_log_length, NULL, &vert_shader_error_msg[0]);
         log_error("%s\n", &vert_shader_error_msg[0]);
         free(vert_shader_error_msg);
@@ -48,7 +48,7 @@ Shader *shader_create(const char *vert_path, const char *frag_path) {
     glGetShaderiv(frag_shader_id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(frag_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if (info_log_length > 0) {
-        const char* frag_shader_error_msg = malloc(sizeof(const char*) * (info_log_length + 1));
+        const char *frag_shader_error_msg = malloc(sizeof(const char *) * (info_log_length + 1));
         glGetShaderInfoLog(vert_shader_id, info_log_length, NULL, &frag_shader_error_msg[0]);
         log_error("%s\n", &frag_shader_error_msg[0]);
         free(frag_shader_error_msg);
@@ -65,12 +65,12 @@ Shader *shader_create(const char *vert_path, const char *frag_path) {
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
     glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &info_log_length);
     if (info_log_length > 0) {
-        const char* program_error_msg = malloc(sizeof(const char*) * (info_log_length + 1));
+        const char *program_error_msg = malloc(sizeof(const char *) * (info_log_length + 1));
         glGetShaderInfoLog(vert_shader_id, info_log_length, NULL, &program_error_msg[0]);
         log_error("%s\n", &program_error_msg[0]);
         free(program_error_msg);
     }
-    
+
     glDetachShader(program_id, vert_shader_id);
     glDetachShader(program_id, frag_shader_id);
 
@@ -84,7 +84,8 @@ Shader *shader_create(const char *vert_path, const char *frag_path) {
 
 char *shader_read_from_file(const char *path) {
     file f = file_open(path, FILE_MODE_READ);
-    char *code = malloc(f->size);
+    char *code;
+    code = malloc(sizeof(*code) * f->size);
     file_read(f, 0, f->size, code);
     code[f->size] = '\0';
     file_close(f);
@@ -94,6 +95,7 @@ char *shader_read_from_file(const char *path) {
 }
 
 void shader_destroy(Shader *shader) {
+    glDeleteProgram(shader->program_id);
     free(shader->vert_code);
     free(shader->frag_code);
     free(shader);
