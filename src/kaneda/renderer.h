@@ -4,6 +4,7 @@
 #include "kore.h"
 #include "shader.h"
 #include "window.h"
+#include "math.h"
 
 typedef struct {
     uint32 width;
@@ -17,7 +18,7 @@ typedef struct {
     unsigned int tex_container;
     unsigned int tex_face;
 
-    float *cube_positions;
+    vec3 *cube_positions;
 } Renderer;
 
 Renderer *renderer_create(Window *win);

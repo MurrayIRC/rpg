@@ -6,7 +6,8 @@ mkdir osx
 cd osx
 
 proj_name=rpg
-proj_root_dir=$(pwd)/../../..
+proj_root_dir=/Users/murray/work/c/rpg
+#$(pwd)/../../..
 
 flags=(
 	-std=c17 -x objective-c -O0 -w 
@@ -26,7 +27,6 @@ src=(
 	${proj_root_dir}/src/kaneda/shader.c
 	${proj_root_dir}/src/kaneda/renderer.c
 	${proj_root_dir}/src/kaneda/mem_debug.c
-	${proj_root_dir}/src/kaneda/math.c
 	${proj_root_dir}/src/kaneda/file.c
 	${proj_root_dir}/src/kaneda/log.c
 )

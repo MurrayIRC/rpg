@@ -44,11 +44,20 @@ Renderer *renderer_create(Window *win) {
                         -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
                         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
                         -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
-    float cube_positions[30] = {0.0f,  0.0f,  0.0f,  2.0f,   5.0f,  -15.0f, -1.5f, -2.2f,
-                                -2.5f, -3.8f, -2.0f, -12.3f, 2.4f,  -0.4f,  -3.5f, -1.7f,
-                                3.0f,  -7.5f, 1.3f,  -2.0f,  -2.5f, 1.5f,   2.0f,  -2.5f,
-                                1.5f,  0.2f,  -1.5f, -1.3f,  1.0f,  -1.5f};
-    renderer->cube_positions = &cube_positions;
+    
+    vec3 cubes[] = {
+        math_vec3( 0.0f,  0.0f,  0.0f),
+        math_vec3( 2.0f,  5.0f, -15.0f),
+        math_vec3(-1.5f, -2.2f, -2.5f),
+        math_vec3(-3.8f, -2.0f, -12.3f),
+        math_vec3( 2.4f, -0.4f, -3.5f),
+        math_vec3(-1.7f,  3.0f, -7.5f),
+        math_vec3( 1.3f, -2.0f, -2.5f),
+        math_vec3( 1.5f,  2.0f, -2.5f),
+        math_vec3( 1.5f,  0.2f, -1.5f),
+        math_vec3(-1.3f,  1.0f, -1.5f)
+    };
+    renderer->cube_positions = &cubes;
 
     glGenVertexArrays(1, &renderer->vao);
     glGenBuffers(1, &renderer->vbo);
@@ -126,27 +135,23 @@ void renderer_draw_frame(Renderer *renderer) {
     shader_use(renderer->simple_shader);
 
     // create transformations
-    float view[16];
-    math_matrix_identity(&view);
-    float projection[16];
-    math_matrix_identity(&projection);
+    mat4 view = math_mat4_identity();
+    view = math_translate(view, math_vec3(0.0f, 0.0f, -3.0f));
 
-    math_perspective(&projection, 45.0f, (float)renderer->width / (float)renderer->height, 0.1f,
-                     100.0f);
-    math_translate(&view, 0.0f, 0.0f, -3.0f);
+    mat4 projection = math_mat4_identity();
+    projection = math_perspective(45.0f, (float)renderer->width / (float)renderer->height, 0.1f, 100.0f);
 
     // get matrix's uniform location and set matrix
-    shader_set_mat4(renderer->simple_shader, "projection", &projection);
-    shader_set_mat4(renderer->simple_shader, "view", &view);
+    shader_set_mat4(renderer->simple_shader, "projection", &projection.elements);
+    shader_set_mat4(renderer->simple_shader, "view", &view.elements);
 
     glBindVertexArray(renderer->vao);
     for (uint32 i = 0; i < 10; i++) {
-        float model[16];
-        math_translate(&model, renderer->cube_positions[i * 3], renderer->cube_positions[1 + i * 3],
-                       renderer->cube_positions[2 + i * 3]);
+        mat4 model = math_mat4_identity();
+        model = math_translate(model, renderer->cube_positions[i]);
         float angle = 20.0f * i + (float)glfwGetTime();
-        // math_rotate(&model, angle, 1.0f, 0.3f, 0.5f);
-        shader_set_mat4(renderer->simple_shader, "model", &model);
+        model = math_rotate(model, angle, math_vec3(1.0f, 0.3f, 0.5f));
+        shader_set_mat4(renderer->simple_shader, "model", &model.elements);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 }
@@ -185,8 +190,8 @@ void renderer_destroy(Renderer *renderer) {
     // // Our ModelViewProjection : multiplication of our 3 matrices
     // // REMEMBER, matrix multiplication is the other way around
     // float p_v[16];
-    // math_matrix_multiply(&p_v, &projection, &view);
-    // math_matrix_multiply(&renderer->mvp, &p_v, &model);
+    // math_mat4_multiply(&p_v, &projection, &view);
+    // math_mat4_multiply(&renderer->mvp, &p_v, &model);
     // ------------------------
 
 */

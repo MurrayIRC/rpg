@@ -1,9 +1,90 @@
+#ifndef MATH_H
+#define MATH_H
+
 #include "kore.h"
 #include "log.h"
 #include <assert.h>
 #include <math.h>
 
-float math_sqrt(float number) {
+#define MATH_INLINE static inline
+
+/*------- Math Types -------
+Types like vec2 and mat4 which we use in the library.
+*/
+
+typedef union vec2 {
+    struct {
+        float x, y;
+    };
+    struct {
+        float u, v;
+    };
+    struct {
+        float left, right;
+    };
+    struct {
+        float width, height;
+    };
+    float elements[2];
+} vec2;
+
+typedef union vec3 {
+    struct {
+        float x, y, z;
+    };
+    struct {
+        float u, v, w;
+    };
+    struct {
+        float r, g, b;
+    };
+    struct {
+        float width, height, depth;
+    };
+    float elements[3];
+} vec3;
+
+typedef union vec4 {
+    struct {
+        union {
+            vec3 xyz;
+            struct {
+                float x, y, z;
+            };
+        };
+        float w;
+    };
+    struct {
+        union {
+            vec3 rgb;
+            struct {
+                float r, g, b;
+            };
+        };
+        float a;
+    };
+    float elements[4];
+} vec4;
+
+typedef struct mat4 {
+    float elements[16];
+} mat4;
+
+typedef union quaternion {
+    struct {
+        union {
+            vec3 xyz;
+            struct {
+                float x, y, z;
+            };
+        };
+        float w;
+    };
+    float elements[4];
+} quaternion;
+
+/* John Carmack's fast sqrt! */
+static inline float math_sqrt(float number) {
     int i;
     float x, y;
     x = number * 0.5;
@@ -16,225 +97,236 @@ float math_sqrt(float number) {
     return number * y;
 }
 
-float math_randf(uint32 index) {
+/*------- Random number generators -------
+These are very fast pseudo random number generators useful for graphics applications. NOT
+cryptographically safe in any way.
+*/
+
+/* ranged 0 to 1*/
+MATH_INLINE float math_randf(uint32 index) {
     index = (index << 13) ^ index;
     return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) /
             1073741824.0f) *
            0.5f;
 }
 
-float math_randnf(uint32 index) {
+/* ranged -1 to 1*/
+MATH_INLINE float math_randnf(uint32 index) {
     index = (index << 13) ^ index;
     return (((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff) /
             1073741824.0f) -
            1.0f;
 }
 
-uint math_randi(uint32 index) {
+/* integer version */
+MATH_INLINE uint math_randi(uint32 index) {
     index = (index << 13) ^ index;
     return ((index * (index * index * 15731 + 789221) + 1376312589) & 0x7fffffff);
 }
 
-float math_deg2rad(float degrees) {
+/*------- Normie math -------
+This is just math library stuff i need.
+*/
+
+MATH_INLINE float math_deg2rad(float degrees) {
     return degrees * (PI / 180.0f);
 }
 
-float math_rad2deg(float radians) {
+MATH_INLINE float math_rad2deg(float radians) {
     return radians * (180.0f / PI);
 }
 
-void math_perspective(float *out_mat, float fov, float aspect, float z_near, float z_far) {
-    assert(aspect != 0);
-    assert(z_far != z_near);
 
-    float q = 1.0f / (float)tan(math_deg2rad(0.5f * fov));
-    float a = q / aspect;
-    float b = (z_near + z_far) / (z_near - z_far);
-    float c = (2.0f * z_near * z_far) / (z_near - z_far);
+/*------- Vector math -------
+These are common functions used in vector math. */
 
-    out_mat[0 + 0 * 4] = a;
-    out_mat[1 + 1 * 4] = q;
-    out_mat[2 + 2 * 4] = b;
-    out_mat[2 + 3 * 4] = c;
-    out_mat[3 + 2 * 4] = -1.0f;
+/* Returns a vec2 filled with the given values. */
+MATH_INLINE vec2 math_vec2(const float x, const float y) {
+    return (vec2){x, y};
 }
 
-void math_orthographic(float *out_mat, float left, float right, float bottom, float top,
-                       float z_near, float z_far) {
-    math_matrix_identity(&out_mat);
-
-    // Main diagonal
-    out_mat[0 + 0 * 4] = 2.0f / (right - left);
-    out_mat[1 + 1 * 4] = 2.0f / (top - bottom);
-    out_mat[2 + 2 * 4] = -2.0f / (z_far - z_near);
-
-    // Last column
-    out_mat[0 + 3 * 4] = -(right + left) / (right - left);
-    out_mat[1 + 3 * 4] = -(top + bottom) / (top - bottom);
-    out_mat[2 + 3 * 4] = -(z_far + z_near) / (z_far - z_near);
-
-    // out_mat[0] = 2.0f / (fov - (-fov));
-    // out_mat[5] = 2.0f / (fov - (-fov));
-    // out_mat[10] = -2.0f / (z_far - z_near);
-    // out_mat[3] = -(fov + (-fov)) / (fov - (-fov));
-    // out_mat[7] = -(fov + (-fov)) / (fov - (-fov));
-    // out_mat[11] = -(z_far + z_near) / (z_far - z_near);
+/* Returns a vec3 filled with the given values. */
+MATH_INLINE vec3 math_vec3(const float x, const float y, const float z) {
+    return (vec3){x, y, z};
 }
 
-void math_lookat(float *out_mat, float *vec_pos, float *vec_target, float *vec_up) {
-    float f[3] = {vec_target[0] - vec_pos[0], vec_target[1] - vec_pos[1],
-                  vec_target[2] - vec_pos[2]};
-    math_normalize3d(&f);
-
-    log_info("Hey!\n");
-
-    float s[3];
-    math_cross3d(&s, f, vec_up);
-    math_normalize3d(&s);
-
-    float u[3];
-    math_cross3d(&u, s, f);
-
-    math_matrix_identity(&out_mat);
-    out_mat[0 * 4 + 0] = s[0];
-    out_mat[1 * 4 + 0] = s[1];
-    out_mat[2 * 4 + 0] = s[2];
-
-    out_mat[0 * 4 + 1] = u[0];
-    out_mat[1 * 4 + 1] = u[1];
-    out_mat[2 * 4 + 1] = u[2];
-
-    out_mat[0 * 4 + 2] = -f[0];
-    out_mat[1 * 4 + 2] = -f[1];
-    out_mat[2 * 4 + 2] = -f[2];
-
-    out_mat[3 * 4 + 0] = -math_dot3d(s, vec_pos);
-    out_mat[3 * 4 + 1] = -math_dot3d(u, vec_pos);
-    out_mat[3 * 4 + 2] = math_dot3d(f, vec_pos);
+/* Returns a vec4 filled with the given values. */
+MATH_INLINE vec4 math_vec4(const float x, const float y, const float z, const float w) {
+    return (vec4){x, y, z, w};
 }
 
-float math_length2d(float *vec) {
-    return math_sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
+/* Returns a vec2 filled with 0's. */
+MATH_INLINE vec2 math_vec2_zero(void) {
+    return (vec2){0};
 }
 
-float math_length3d(float *vec) {
-    return math_sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+/* Returns a vec3 filled with 0's. */
+MATH_INLINE vec3 math_vec3_zero(void) {
+    return (vec3){0};
 }
 
-float math_distance2d(float *a, float *b) {
-    float tmp[2];
-    tmp[0] = a[0] - b[0];
-    tmp[1] = a[1] - b[1];
-    return math_sqrt(tmp[0] * tmp[0] + tmp[1] * tmp[1]);
+/* Returns a vec4 filled with 0's. */
+MATH_INLINE vec4 math_vec4_zero(void) {
+    return (vec4){0};
 }
 
-float math_distance3d(float *a, float *b) {
-    float tmp[3];
-    tmp[0] = a[0] - b[0];
-    tmp[1] = a[1] - b[1];
-    tmp[2] = a[2] - b[2];
-    return math_sqrt(tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2]);
+/* Returns a vec2 of the addition between a and b. */
+MATH_INLINE vec2 math_vec2_add(const vec2 a, const vec2 b) {
+    return math_vec2(a.x + b.x, a.y + b.y);
 }
 
-float math_dot2d(float *a, float *b) {
-    return a[0] * b[0] + a[1] * b[1];
+/* Returns a vec3 of the addition between a and b. */
+MATH_INLINE vec3 math_vec3_add(const vec3 a, const vec3 b) {
+    return math_vec3(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
-float math_dot3d(float *a, float *b) {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+/* Returns a vec4 of the addition between a and b. */
+MATH_INLINE vec4 math_vec4_add(const vec4 a, const vec4 b) {
+    return math_vec4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 }
 
-void math_cross2d(float *output, float *a, float *b) {
-    output[0] = a[1];
-    output[1] = -a[0];
+/* Returns a vec2 of the difference between a and b. */
+MATH_INLINE vec2 math_vec2_subtract(const vec2 a, const vec2 b) {
+    return math_vec2(a.x - b.x, a.y - b.y);
 }
 
-void math_cross3d(float *output, float *a, float *b) {
-    output[0] = a[1] * b[2] - a[2] * b[1];
-    output[1] = a[2] * b[0] - a[0] * b[2];
-    output[2] = a[0] * b[1] - a[1] * b[0];
+/* Returns a vec3 of the difference between a and b. */
+MATH_INLINE vec3 math_vec3_subtract(const vec3 a, const vec3 b) {
+    return math_vec3(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-void math_normalize2d(float *vec) {
-    float f = math_sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
-    vec[0] /= f;
-    vec[1] /= f;
+/* Returns a vec4 of the difference between a and b. */
+MATH_INLINE vec4 math_vec4_subtract(const vec4 a, const vec4 b) {
+    return math_vec4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 }
 
-void math_normalize3d(float *vec) {
-    float f = math_sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-    vec[0] /= f;
-    vec[1] /= f;
-    vec[2] /= f;
+/* Computes the length of a vector 2D for 32 bit floats.*/
+MATH_INLINE float math_vec2_length(const vec2 vec) {
+    return math_sqrt(vec.x * vec.x + vec.y * vec.y);
 }
 
-void math_normalize4d(float *vec) {
-    float f = math_sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2] + vec[3] * vec[3]);
-    vec[0] /= f;
-    vec[1] /= f;
-    vec[2] /= f;
-    vec[3] /= f;
+/* Computes the length of a vector 3D for 32 bit floats.*/
+MATH_INLINE float math_vec3_length(const vec3 vec) {
+    return math_sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 }
 
-void math_normal2d(float *output, float *a, float *b) {
-    output[0] = a[1] - b[1];
-    output[1] = b[0] - a[0];
-    float f = math_sqrt(output[0] * output[0] + output[1] * output[1]);
-    output[0] /= f;
-    output[1] /= f;
+MATH_INLINE float math_vec4_length(const vec4 vec) {
+    return math_sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z + vec.w * vec.w);
 }
 
-void math_normal3d(float *output, float *a, float *b, float *c) {
-    float a2[3], b2[3], f;
-    a2[0] = a[0] - c[0];
-    a2[1] = a[1] - c[1];
-    a2[2] = a[2] - c[2];
-    b2[0] = b[0] - c[0];
-    b2[1] = b[1] - c[1];
-    b2[2] = b[2] - c[2];
-    output[0] = a2[1] * b2[2] - a2[2] * b2[1];
-    output[1] = a2[2] * b2[0] - a2[0] * b2[2];
-    output[2] = a2[0] * b2[1] - a2[1] * b2[0];
-    f = math_sqrt(output[0] * output[0] + output[1] * output[1] + output[2] * output[2]);
-    output[0] /= f;
-    output[1] /= f;
-    output[2] /= f;
+/* Computes the distance between two points in 2D for 32 bit floats.*/
+MATH_INLINE float math_vec2_distance(const vec2 a, const vec2 b) {
+    return math_sqrt(math_vec2_length(math_vec2_subtract(a, b)));
 }
 
-void math_reflect2d(float *output, float *pos, float *normal) {
+/* Computes the distance between two points in 3D for 32 bit floats.*/
+MATH_INLINE float math_vec3_distance(const vec3 a, const vec3 b) {
+    return math_sqrt(math_vec3_length(math_vec3_subtract(a, b)));
+}
+
+/* Computes the dot product between two points in 2D for 32 bit floats.*/
+MATH_INLINE float math_vec2_dot(vec2 a, vec2 b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+/* Computes the dot product between two points in 3D for 32 bit floats.*/
+MATH_INLINE float math_vec3_dot(vec3 a, vec3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+/* Computes cross product between two points in 2D for 32 bit floats.*/
+MATH_INLINE vec2 math_vec2_cross(vec2 a, vec2 b) {
+    return math_vec2(a.y, -a.x);
+}
+
+/* Computes cross product between two points in 3D for 32 bit floats.*/
+MATH_INLINE vec3 math_vec3_cross(vec3 a, vec3 b) {
+    return math_vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+}
+
+/* Normalizes a 2D vector of 32 bit floats.*/
+MATH_INLINE vec2 math_vec2_normalize(vec2 vec) {
+    float f = math_sqrt(math_vec2_length(vec));
+    return math_vec2(vec.x / f, vec.y / f);
+}
+
+/* Normalizes a 3D vector of 32 bit floats.*/
+MATH_INLINE vec3 math_vec3_normalize(vec3 vec) {
+    float f = math_sqrt(math_vec3_length(vec));
+    return math_vec3(vec.x / f, vec.y / f, vec.z / f);
+}
+
+/* Normalizes a 4D vector of 32 bit floats (useful for quaternions).*/
+MATH_INLINE vec4 math_vec4_normalize(vec4 vec) {
+    float f = math_sqrt(math_vec4_length(vec));
+    return math_vec4(vec.x / f, vec.y / f, vec.z / f, vec.w / f);
+}
+
+/* Generates a normal from 2 points on a line. */
+MATH_INLINE vec2 math_vec2_normal(const vec2 a, const vec2 b) {
+    vec2 output = math_vec2(a.y - b.y, b.x - a.x);
+    float f = math_sqrt(math_vec2_length(output));
+    output.x /= f;
+    output.x /= f;
+    return output;
+}
+
+/* Generates a normal from 3 points on a plane. */
+MATH_INLINE vec3 math_vec3_normal(const vec3 a, const vec3 b, const vec3 c) {
+    vec3 a2 = math_vec3(a.x - c.x, a.y - c.y, a.z - c.z);
+    vec3 b2 = math_vec3(b.x - c.x, b.y - c.y, b.z - c.z);
+    vec3 output = math_vec3(
+        a2.y * b2.z - a2.z * b2.y, 
+        a2.z * b2.x - a2.x * b2.z, 
+        a2.x * b2.y - a2.y * b2.x
+    );
+    float f = math_sqrt(math_vec3_length(output));
+    output.x /= f;
+    output.y /= f;
+    output.z /= f;
+    return output;
+}
+
+/* Reflects a position to a normal plane in 2D for 32 bit floats.*/
+MATH_INLINE void math_reflect2d(float *output, float *pos, float *normal) {
     float f = pos[0] * normal[0] + pos[1] * normal[1];
     output[0] = pos[0] - normal[0] * 2.0 * f;
     output[1] = pos[1] - normal[1] * 2.0 * f;
 }
 
-void math_reflect3d(float *output, float *pos, float *normal) {
+/* Reflects a position to a normal plane in 3D for 32 bit floats.*/
+MATH_INLINE void math_reflect3d(float *output, float *pos, float *normal) {
     float f = pos[0] * normal[0] + pos[1] * normal[1] + pos[2] * normal[2];
     output[0] = pos[0] - normal[0] * 2.0 * f;
     output[1] = pos[1] - normal[1] * 2.0 * f;
     output[2] = pos[2] - normal[2] * 2.0 * f;
 }
 
-void math_flatten2d(float *output, float *pos, float *normal) {
+/* Flattens a position to a normal plane in 2D for 32 bit floats.*/
+MATH_INLINE void math_flatten2d(float *output, float *pos, float *normal) {
     float f = pos[0] * normal[0] + pos[1] * normal[1];
     output[0] = pos[0] - normal[0] * f;
     output[1] = pos[1] - normal[1] * f;
 }
 
-void math_flatten3d(float *output, float *pos, float *normal) {
+/* Flattens a position to a normal plane in 3D for 32 bit floats.*/
+MATH_INLINE void math_flatten3d(float *output, float *pos, float *normal) {
     float f = pos[0] * normal[0] + pos[1] * normal[1] + pos[2] * normal[2];
     output[0] = pos[0] - normal[0] * f;
     output[1] = pos[1] - normal[1] * f;
     output[2] = pos[2] - normal[2] * f;
 }
 
-void math_project2d(float *output, float *plane_pos, float *normal, float *pos, float *vector) {
+/* projects from aposition along a vector on to a positioned plane in 2D for 32 bit floats.*/
+MATH_INLINE void math_project2d(float *output, float *plane_pos, float *normal, float *pos, float *vector) {
     float f = normal[0] * (plane_pos[0] - pos[0]) + normal[1] * (plane_pos[1] - pos[1]);
     f /= normal[0] * vector[0] + normal[1] * vector[1];
     output[0] = pos[0] + vector[0] * f;
     output[1] = pos[1] + vector[1] * f;
 }
 
-void math_project3d(float *output, float *plane_pos, float *normal, float *pos, float *vector) {
+/* projects fr0m aposition along a vector on to a positioned plane in 3D for 32 bit floats.*/
+MATH_INLINE void math_project3d(float *output, float *plane_pos, float *normal, float *pos, float *vector) {
     float f = normal[0] * (plane_pos[0] - pos[0]) + normal[1] * (plane_pos[1] - pos[1]) +
               normal[2] * (plane_pos[2] - pos[2]);
     f /= normal[0] * vector[0] + normal[1] * vector[1] + normal[2] * vector[2];
@@ -243,7 +335,8 @@ void math_project3d(float *output, float *plane_pos, float *normal, float *pos, 
     output[2] = pos[2] + vector[2] * f;
 }
 
-void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line_b0,
+/* Computes the intersection between two lines in 2D for 32 bit floats.*/
+MATH_INLINE void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line_b0,
                       float *line_b1) {
     output[0] = (line_a0[0] * line_a1[1] - line_a0[1] * line_a1[0]) * (line_b0[0] - line_b1[0]) -
                 (line_b0[0] * line_b1[1] - line_b0[1] * line_b1[0]) * (line_a0[0] - line_a1[0]);
@@ -255,6 +348,9 @@ void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line
                  (line_a0[1] - line_a1[1]) * (line_b0[0] - line_b1[0]);
 }
 
+/*------- Integer vector math -------------
+Vector math for integer types. */
+
 #define sqrt_step(shift)                                                                           \
     if ((0x40000000l >> shift) + root <= value) {                                                  \
         value -= (0x40000000l >> shift) + root;                                                    \
@@ -263,7 +359,8 @@ void math_intersect2d(float *output, float *line_a0, float *line_a1, float *line
         root = root >> 1;                                                                          \
     }
 
-long math_sqrti(long value) {
+/* Integer square root.*/
+MATH_INLINE long math_sqrti(long value) {
     long root = 0;
     sqrt_step(0);
     sqrt_step(2);
@@ -287,7 +384,9 @@ long math_sqrti(long value) {
     return root;
 }
 
-bool math_normalize2di(int *point, int fixed_point_multiplier) {
+/* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considered
+    to be one. */
+MATH_INLINE bool math_normalize2di(int *point, int fixed_point_multiplier) {
     int length = math_sqrti(point[0] * point[0] + point[1] * point[1]);
     if (length != 0) {
         point[0] = (point[0] * fixed_point_multiplier) / length;
@@ -297,7 +396,9 @@ bool math_normalize2di(int *point, int fixed_point_multiplier) {
     return 0;
 }
 
-bool math_normalize3di(int *point, int fixed_point_multiplier) {
+/* Normalizes a 2D vector of integers. The fixed_point_multiplier is used to set what is considered
+    to be one. */
+MATH_INLINE bool math_normalize3di(int *point, int fixed_point_multiplier) {
     int length = math_sqrti(point[0] * point[0] + point[1] * point[1] + point[2] * point[2]);
     if (length != 0) {
         point[0] = (point[0] * fixed_point_multiplier) / length;
@@ -308,7 +409,8 @@ bool math_normalize3di(int *point, int fixed_point_multiplier) {
     return 0;
 }
 
-void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, int *line_b1) {
+/* Intersects two 2d integer lines. */
+MATH_INLINE void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, int *line_b1) {
     int64 i, tmp, line64_a0[2], line64_a1[2], line64_b0[2], line64_b1[2];
     line64_a0[0] = (int64)line_a0[0];
     line64_a0[1] = (int64)line_a0[1];
@@ -346,31 +448,116 @@ void math_intersect2di(int *output, int *line_a0, int *line_a1, int *line_b0, in
     output[1] = (int)tmp;
 }
 
-void math_matrix_identity(float *matrix) {
-    matrix[0] = 1;
-    matrix[1] = 0;
-    matrix[2] = 0;
-    matrix[3] = 0;
-    matrix[4] = 0;
-    matrix[5] = 1;
-    matrix[6] = 0;
-    matrix[7] = 0;
-    matrix[8] = 0;
-    matrix[9] = 0;
-    matrix[10] = 1;
-    matrix[11] = 0;
-    matrix[12] = 0;
-    matrix[13] = 0;
-    matrix[14] = 0;
-    matrix[15] = 1;
+/*------- Matrix operations ------------------------
+Matrix operations for 4x4 matrices.*/
+
+/* Creates an empty matrix (all 0's). */
+MATH_INLINE mat4 math_mat4_create(void) {
+    return (mat4){0};
 }
 
-/*
-0,  1,  2,  3,
-4,  5,  6,  7,
-8,  9,  10, 11,
-12, 13, 14, 15
-*/
+/* Creates a matrix with a specified left-right diagonal. */
+MATH_INLINE mat4 math_mat4_create_with_diagonal(float diagonal) {
+    mat4 result = {0};
+    result.elements[0] = diagonal;
+    result.elements[5] = diagonal;
+    result.elements[10] = diagonal;
+    result.elements[15] = diagonal;
+    return result;
+}
+
+/* Creates an identity matrix (a matrix with 1.0f along the left-right diagonal). */
+MATH_INLINE mat4 math_mat4_identity(void) {
+    return math_mat4_create_with_diagonal(1.0f);
+}
+
+/* Multiplies two 4x4 32 bit float matrices.*/
+MATH_INLINE mat4 math_mat4_multiply(const mat4 a, const mat4 b) {
+    mat4 result = math_mat4_create();
+    result.elements[0] = (b.elements[0] * a.elements[0]) + (b.elements[1] * a.elements[4]) + (b.elements[2] * a.elements[8]) + (b.elements[3] * a.elements[12]);
+    result.elements[4] = (b.elements[4] * a.elements[0]) + (b.elements[5] * a.elements[4]) + (b.elements[6] * a.elements[8]) + (b.elements[7] * a.elements[12]);
+    result.elements[8] = (b.elements[8] * a.elements[0]) + (b.elements[9] * a.elements[4]) + (b.elements[10] * a.elements[8]) + (b.elements[11] * a.elements[12]);
+    result.elements[12] = (b.elements[12] * a.elements[0]) + (b.elements[13] * a.elements[4]) + (b.elements[14] * a.elements[8]) + (b.elements[15] * a.elements[12]);
+
+    result.elements[1] = (b.elements[0] * a.elements[1]) + (b.elements[1] * a.elements[5]) + (b.elements[2] * a.elements[9]) + (b.elements[3] * a.elements[13]);
+    result.elements[5] = (b.elements[4] * a.elements[1]) + (b.elements[5] * a.elements[5]) + (b.elements[6] * a.elements[9]) + (b.elements[7] * a.elements[13]);
+    result.elements[9] = (b.elements[8] * a.elements[1]) + (b.elements[9] * a.elements[5]) + (b.elements[10] * a.elements[9]) + (b.elements[11] * a.elements[13]);
+    result.elements[13] = (b.elements[12] * a.elements[1]) + (b.elements[13] * a.elements[5]) + (b.elements[14] * a.elements[9]) + (b.elements[15] * a.elements[13]);
+
+    result.elements[2] = (b.elements[0] * a.elements[2]) + (b.elements[1] * a.elements[6]) + (b.elements[2] * a.elements[10]) + (b.elements[3] * a.elements[14]);
+    result.elements[6] = (b.elements[4] * a.elements[2]) + (b.elements[5] * a.elements[6]) + (b.elements[6] * a.elements[10]) + (b.elements[7] * a.elements[14]);
+    result.elements[10] = (b.elements[8] * a.elements[2]) + (b.elements[9] * a.elements[6]) + (b.elements[10] * a.elements[10]) + (b.elements[11] * a.elements[14]);
+    result.elements[14] = (b.elements[12] * a.elements[2]) + (b.elements[13] * a.elements[6]) + (b.elements[14] * a.elements[10]) + (b.elements[15] * a.elements[14]);
+
+    result.elements[3] = (b.elements[0] * a.elements[3]) + (b.elements[1] * a.elements[7]) + (b.elements[2] * a.elements[11]) + (b.elements[3] * a.elements[15]);
+    result.elements[7] = (b.elements[4] * a.elements[3]) + (b.elements[5] * a.elements[7]) + (b.elements[6] * a.elements[11]) + (b.elements[7] * a.elements[15]);
+    result.elements[11] = (b.elements[8] * a.elements[3]) + (b.elements[9] * a.elements[7]) + (b.elements[10] * a.elements[11]) + (b.elements[11] * a.elements[15]);
+    result.elements[15] = (b.elements[12] * a.elements[3]) + (b.elements[13] * a.elements[7]) + (b.elements[14] * a.elements[11]) + (b.elements[15] * a.elements[15]);
+
+    return result;
+}
+
+MATH_INLINE mat4 math_perspective(float fov, float aspect, float z_near, float z_far) {
+    assert(aspect != 0);
+    assert(z_far != z_near);
+
+    mat4 result = math_mat4_create();
+
+    float q = 1.0f / (float)tan(math_deg2rad(0.5f * fov));
+    float a = q / aspect;
+    float b = (z_near + z_far) / (z_near - z_far);
+    float c = (2.0f * z_near * z_far) / (z_near - z_far);
+
+    result.elements[0 + 0 * 4] = a;
+    result.elements[1 + 1 * 4] = q;
+    result.elements[2 + 2 * 4] = b;
+    result.elements[2 + 3 * 4] = c;
+    result.elements[3 + 2 * 4] = -1.0f;
+
+    return result;
+}
+
+MATH_INLINE mat4 math_orthographic(float left, float right, float bottom, float top,
+                       float z_near, float z_far) {
+    mat4 result = math_mat4_identity();
+
+    // Main diagonal
+    result.elements[0 + 0 * 4] = 2.0f / (right - left);
+    result.elements[1 + 1 * 4] = 2.0f / (top - bottom);
+    result.elements[2 + 2 * 4] = -2.0f / (z_far - z_near);
+
+    // Last column
+    result.elements[0 + 3 * 4] = -(right + left) / (right - left);
+    result.elements[1 + 3 * 4] = -(top + bottom) / (top - bottom);
+    result.elements[2 + 3 * 4] = -(z_far + z_near) / (z_far - z_near);
+
+    return result;
+}
+
+MATH_INLINE mat4 math_lookat(vec3 pos, vec3 target, vec3 up) {
+    vec3 f = math_vec3_normalize(math_vec3_subtract(target, pos));
+    vec3 s = math_vec3_normalize(math_vec3_cross(f, up));
+    vec3 u = math_vec3_cross(s, f);
+
+    mat4 result = math_mat4_identity();
+    result.elements[0 * 4 + 0] = s.x;
+    result.elements[1 * 4 + 0] = s.y;
+    result.elements[2 * 4 + 0] = s.z;
+
+    result.elements[0 * 4 + 1] = u.x;
+    result.elements[1 * 4 + 1] = u.y;
+    result.elements[2 * 4 + 1] = u.z;
+
+    result.elements[0 * 4 + 2] = -f.x;
+    result.elements[1 * 4 + 2] = -f.y;
+    result.elements[2 * 4 + 2] = -f.z;
+
+    result.elements[3 * 4 + 0] = -math_vec3_dot(s, pos);
+    result.elements[3 * 4 + 1] = -math_vec3_dot(u, pos);
+    result.elements[3 * 4 + 2] = math_vec3_dot(f, pos);
+
+    return result;
+}
 
 /*
 0, 4, 8,  12
@@ -378,57 +565,66 @@ void math_matrix_identity(float *matrix) {
 2, 6, 10, 14
 3, 7, 11, 15
 */
-void math_translate(float *matrix, const float x, const float y, const float z) {
-    math_matrix_identity(matrix);
-    matrix[0 + 4 * 3] = x;
-    matrix[1 + 4 * 3] = y;
-    matrix[2 + 4 * 3] = z;
+/* Translates a matrix by a 3d point. */
+MATH_INLINE mat4 math_translate(mat4 matrix, const vec3 vec) {
+    mat4 translate = math_mat4_identity();
+    translate.elements[3] = vec.x;
+    translate.elements[7] = vec.y;
+    translate.elements[11] = vec.z;
+    mat4 result = math_mat4_multiply(matrix, translate);
+    return result;
 }
 
-void math_scale(float *matrix, const float x, const float y, const float z) {
-    math_matrix_identity(matrix);
-    matrix[0 + 0 * 4] = x;
-    matrix[1 + 1 * 4] = y;
-    matrix[2 + 2 * 4] = z;
+/* Scales a matrix by a 3d point. */
+MATH_INLINE mat4 math_scale(mat4 matrix, const vec3 vec) {
+    mat4 scale = math_mat4_identity();
+    scale.elements[0] = vec.x;
+    scale.elements[5] = vec.y;
+    scale.elements[10] = vec.z;
+    mat4 result = math_mat4_multiply(matrix, scale);
+    return result;
 }
 
-void math_rotate(float *matrix, const float angle, const float axis_x, const float axis_y,
-                 const float axis_z) {
+/* Rotates a matrix by an angle, assuming a normalized axis. */
+MATH_INLINE mat4 math_rotate(mat4 matrix, const float angle, const vec3 axis) {
     float a = angle;
     float c = (float)cos(a);
     float s = (float)sin(a);
 
-    float n_axis[3] = {axis_x, axis_y, axis_z};
-    math_normalize3d(&n_axis);
+    vec3 n_axis = math_vec3_normalize(axis);
+    float x = n_axis.x;
+    float y = n_axis.y;
+    float z = n_axis.z;
 
-    float x = n_axis[0];
-    float y = n_axis[1];
-    float z = n_axis[2];
-
+    mat4 rotate = math_mat4_identity();
     // First column
-    matrix[0 + 0 * 4] = x * x * (1 - c) + c;
-    matrix[1 + 0 * 4] = x * y * (1 - c) + z * s;
-    matrix[2 + 0 * 4] = x * z * (1 - c) - y * s;
+    rotate.elements[0 + 0 * 4] = x * x * (1 - c) + c;
+    rotate.elements[1 + 0 * 4] = x * y * (1 - c) + z * s;
+    rotate.elements[2 + 0 * 4] = x * z * (1 - c) - y * s;
 
     // Second column
-    matrix[0 + 1 * 4] = x * y * (1 - c) - z * s;
-    matrix[1 + 1 * 4] = y * y * (1 - c) + c;
-    matrix[2 + 1 * 4] = y * z * (1 - c) + x * s;
+    rotate.elements[0 + 1 * 4] = x * y * (1 - c) - z * s;
+    rotate.elements[1 + 1 * 4] = y * y * (1 - c) + c;
+    rotate.elements[2 + 1 * 4] = y * z * (1 - c) + x * s;
 
     // Third column
-    matrix[0 + 2 * 4] = x * z * (1 - c) + y * s;
-    matrix[1 + 2 * 4] = y * z * (1 - c) - x * s;
-    matrix[2 + 2 * 4] = z * z * (1 - c) + c;
+    rotate.elements[0 + 2 * 4] = x * z * (1 - c) + y * s;
+    rotate.elements[1 + 2 * 4] = y * z * (1 - c) - x * s;
+    rotate.elements[2 + 2 * 4] = z * z * (1 - c) + c;
+
+    mat4 result = math_mat4_multiply(matrix, rotate);
+    return result;
 }
 
-void math_transform3d(float *output, const float *matrix, const float x, const float y,
+/* Transforms a 3D point with a 4x4 32 bit float matrix.*/
+MATH_INLINE void math_transform3d(float *output, const float *matrix, const float x, const float y,
                       const float z) {
     output[0] = (matrix[0] * x) + (matrix[4] * y) + (matrix[8] * z) + matrix[12];
     output[1] = (matrix[1] * x) + (matrix[5] * y) + (matrix[9] * z) + matrix[13];
     output[2] = (matrix[2] * x) + (matrix[6] * y) + (matrix[10] * z) + matrix[14];
 }
 
-void math_transform_inv3d(float *out, const float *matrix, float x, float y, float z) {
+MATH_INLINE void math_transform_inv3d(float *out, const float *matrix, float x, float y, float z) {
     x -= matrix[12];
     y -= matrix[13];
     z -= matrix[14];
@@ -437,7 +633,8 @@ void math_transform_inv3d(float *out, const float *matrix, float x, float y, flo
     out[2] = (matrix[8] * x) + (matrix[9] * y) + (matrix[10] * z);
 }
 
-void math_transform4d(float *output, const float *matrix, const float x, const float y,
+/* Transforms a 4D point with a 4x4 32 bit float matrix.*/
+MATH_INLINE void math_transform4d(float *output, const float *matrix, const float x, const float y,
                       const float z, const double w) {
     output[0] = (matrix[0] * x) + (matrix[4] * y) + (matrix[8] * z) + (matrix[12] * w);
     output[1] = (matrix[1] * x) + (matrix[5] * y) + (matrix[9] * z) + (matrix[13] * w);
@@ -445,29 +642,8 @@ void math_transform4d(float *output, const float *matrix, const float x, const f
     output[3] = (matrix[3] * x) + (matrix[7] * y) + (matrix[11] * z) + (matrix[15] * w);
 }
 
-void math_matrix_multiply(float *output, const float *a, const float *b) {
-    output[0] = (b[0] * a[0]) + (b[1] * a[4]) + (b[2] * a[8]) + (b[3] * a[12]);
-    output[4] = (b[4] * a[0]) + (b[5] * a[4]) + (b[6] * a[8]) + (b[7] * a[12]);
-    output[8] = (b[8] * a[0]) + (b[9] * a[4]) + (b[10] * a[8]) + (b[11] * a[12]);
-    output[12] = (b[12] * a[0]) + (b[13] * a[4]) + (b[14] * a[8]) + (b[15] * a[12]);
-
-    output[1] = (b[0] * a[1]) + (b[1] * a[5]) + (b[2] * a[9]) + (b[3] * a[13]);
-    output[5] = (b[4] * a[1]) + (b[5] * a[5]) + (b[6] * a[9]) + (b[7] * a[13]);
-    output[9] = (b[8] * a[1]) + (b[9] * a[5]) + (b[10] * a[9]) + (b[11] * a[13]);
-    output[13] = (b[12] * a[1]) + (b[13] * a[5]) + (b[14] * a[9]) + (b[15] * a[13]);
-
-    output[2] = (b[0] * a[2]) + (b[1] * a[6]) + (b[2] * a[10]) + (b[3] * a[14]);
-    output[6] = (b[4] * a[2]) + (b[5] * a[6]) + (b[6] * a[10]) + (b[7] * a[14]);
-    output[10] = (b[8] * a[2]) + (b[9] * a[6]) + (b[10] * a[10]) + (b[11] * a[14]);
-    output[14] = (b[12] * a[2]) + (b[13] * a[6]) + (b[14] * a[10]) + (b[15] * a[14]);
-
-    output[3] = (b[0] * a[3]) + (b[1] * a[7]) + (b[2] * a[11]) + (b[3] * a[15]);
-    output[7] = (b[4] * a[3]) + (b[5] * a[7]) + (b[6] * a[11]) + (b[7] * a[15]);
-    output[11] = (b[8] * a[3]) + (b[9] * a[7]) + (b[10] * a[11]) + (b[11] * a[15]);
-    output[15] = (b[12] * a[3]) + (b[13] * a[7]) + (b[14] * a[11]) + (b[15] * a[15]);
-}
-
-void math_matrix_reverse4x4(float *output, const float *matrix) {
+/* Reverses a 4x4 32 bit float matrix.*/
+MATH_INLINE void math_matrix_reverse4x4(float *output, const float *matrix) {
     output[0] = matrix[5] * matrix[10] * matrix[15] + matrix[6] * matrix[11] * matrix[13] +
                 matrix[7] * matrix[9] * matrix[14] - matrix[5] * matrix[11] * matrix[14] -
                 matrix[6] * matrix[9] * matrix[15] - matrix[7] * matrix[10] * matrix[13];
@@ -518,7 +694,8 @@ void math_matrix_reverse4x4(float *output, const float *matrix) {
                  matrix[1] * matrix[4] * matrix[10] - matrix[2] * matrix[5] * matrix[8];
 }
 
-void math_quaternion_to_matrix(float *matrix, float x, float y, float z, float w) {
+/* Converts a 32 bit float quaternion to a 4x4 32 bit float matrix.*/
+MATH_INLINE void math_quaternion_to_matrix(float *matrix, float x, float y, float z, float w) {
     float xx, xy, xz, xw, yy, yz, yw, zz, zw;
     xx = sqrt(x * x + y * y + z * z + w * w);
     x /= xx;
@@ -547,7 +724,8 @@ void math_quaternion_to_matrix(float *matrix, float x, float y, float z, float w
     matrix[15] = 1;
 }
 
-void math_matrix_to_quaternion(float *quaternion, float *matrix) {
+/* Converts a 4x4 32 bit float matrix to a 32 bit float quaternion.*/
+MATH_INLINE void math_matrix_to_quaternion(float *quaternion, float *matrix) {
     float trace, s;
     trace = matrix[0 * 4 + 0] + matrix[1 * 4 + 1] + matrix[2 * 4 + 2];
     if (trace > 0.0f) {
@@ -585,18 +763,20 @@ void math_matrix_to_quaternion(float *quaternion, float *matrix) {
     quaternion[3] /= s;
 }
 
-void math_matrix_to_pos_quaternion_scale(float *matrix, float *pos, float *quaternion,
-                                         float *scale) {
-    math_matrix_to_quaternion(quaternion, matrix);
-    pos[0] = matrix[12];
-    pos[1] = matrix[13];
-    pos[2] = matrix[14];
-    scale[0] = math_length3d(matrix);
-    scale[1] = math_length3d(&matrix[4]);
-    scale[2] = math_length3d(&matrix[8]);
-}
+/* Converts a 4x4 32 bit float matrix to a 32 bit float position, scale and quaternion.*/
+// MATH_INLINE void math_matrix_to_pos_quaternion_scale(mat4 *matrix, vec3 *pos, quaternion *quat, vec3 *scale) {
+//     math_matrix_to_quaternion(quat, matrix);
+//     pos.x = matrix[12];
+//     pos.y = matrix[13];
+//     pos.z = matrix[14];
+    
+//     scale.x = math_vec3_length(matrix->elements);
+//     scale.y = math_vec3_length(&matrix->elements[4]);
+//     scale.z = math_vec3_length(&matrix->elements[8]);
+// }
 
-void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, float *scale,
+/* Converts a 32 bit float position, scale and quaternion to a 4x4 32 bit float matrix.*/
+MATH_INLINE void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, float *scale,
                                          float *matrix) {
     math_quaternion_to_matrix(matrix, quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
     matrix[12] = pos[0];
@@ -613,7 +793,14 @@ void math_pos_quaternion_scale_to_matrix(float *pos, float *quaternion, float *s
     matrix[10] *= scale[2];
 }
 
-void math_matrixxy(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+
+/*------- Matrix Creation ------------------------
+These functions let you create a matrix from two points and an optional origin (The origin can be
+left as NULL). The first vector dominates and the second will be used to determine rotation around
+the first vector*/
+
+/* Lets you create a 32 bit float 4x4 matrix using the X and Y vector */
+MATH_INLINE void math_matrixxy(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -660,7 +847,8 @@ void math_matrixxy(float *matrix, const float *origin, const float *point_a, con
     matrix[15] = 1;
 }
 
-void math_matrixxz(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+/* Lets you create a 32 bit float 4x4 matrix using the X and Z vector */
+MATH_INLINE void math_matrixxz(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -707,7 +895,8 @@ void math_matrixxz(float *matrix, const float *origin, const float *point_a, con
     matrix[15] = 1;
 }
 
-void math_matrixyx(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+/* Lets you create a 32 bit float 4x4 matrix using the Y and X vector */
+MATH_INLINE void math_matrixyx(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -754,7 +943,8 @@ void math_matrixyx(float *matrix, const float *origin, const float *point_a, con
     matrix[15] = 1;
 }
 
-void math_matrixyz(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+/* Lets you create a 32 bit float 4x4 matrix using the Y and Z vector */
+MATH_INLINE void math_matrixyz(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -801,7 +991,8 @@ void math_matrixyz(float *matrix, const float *origin, const float *point_a, con
     matrix[15] = 1;
 }
 
-void math_matrixzx(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+/* Lets you create a 32 bit float 4x4 matrix using the Z and X vector */
+MATH_INLINE void math_matrixzx(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -848,7 +1039,8 @@ void math_matrixzx(float *matrix, const float *origin, const float *point_a, con
     matrix[15] = 1;
 }
 
-void math_matrixzy(float *matrix, const float *origin, const float *point_a, const float *point_b) {
+/* Lets you create a 32 bit float 4x4 matrix using the Z and Y vector */
+MATH_INLINE void math_matrixzy(float *matrix, const float *origin, const float *point_a, const float *point_b) {
     float r, a[3], b[3];
     if (origin != NULL) {
         a[0] = point_a[0] - origin[0];
@@ -894,3 +1086,5 @@ void math_matrixzy(float *matrix, const float *origin, const float *point_a, con
     matrix[11] = 0;
     matrix[15] = 1;
 }
+
+#endif // MATH_H

@@ -36,7 +36,7 @@
                 "/Library/Frameworks"
             ],
             "compilerPath": "/usr/bin/clang",
-            "cStandard": "gnu89",
+            "cStandard": "c17",
             "intelliSenseMode": "clang-x64"
         },
         {
