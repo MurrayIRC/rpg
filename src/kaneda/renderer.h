@@ -9,6 +9,10 @@ typedef struct {
     Shader *simple_shader;
     GLuint vao;
     GLuint vbo;
+    GLuint ebo;
+
+    unsigned int tex_container;
+    unsigned int tex_face;
 
     GLuint mvp_uniform_id;
     float mvp[16];

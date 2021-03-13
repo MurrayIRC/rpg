@@ -55,11 +55,11 @@ typedef uint64_t uint64;
 /* Defines PI */
 #define PI 3.1415926535897932384626433832795028841971693993751058209749445923
 
-#ifndef NO_MEMORY_DEBUG
-#define MEMORY_DEBUG /* turns on the memory debugging system */
+#ifndef NO_MEMORY_DEBUG // currently broken w/ stb_image :(
+//#define MEMORY_DEBUG /* turns on the memory debugging system */
 #endif
 #ifndef EXIT_CRASH
-#define EXIT_CRASH /* turns on crash on exit */
+//#define EXIT_CRASH /* turns on crash on exit */
 #endif
 
 #ifdef MEMORY_DEBUG
@@ -196,6 +196,13 @@ Matrix operations for 4x4 matrices.*/
 
 /* Clears a 4x4 32 bit float matrix to an identity matrix.*/
 extern void math_matrix_identity(float *matrix);
+/* Translates a matrix by a 3d point. */
+extern void math_translate(float *matrix, const float x, const float y, const float z);
+/* Scales a matrix by a 3d point. */
+extern void math_scale(float *matrix, const float x, const float y, const float z);
+/* Rotates a matrix by an angle, assuming a normalized axis. */
+extern void math_rotate(float *matrix, const float angle, const float axis_x, const float axis_y,
+                        const float axis_z);
 /* Transforms a 3D point with a 4x4 32 bit float matrix.*/
 extern void math_transform3d(float *output, const float *matrix, const float x, const float y,
                              const float z);

@@ -8,11 +8,15 @@
 bool app_run(void) {
     Window *win = window_create(WINDOW_WIDTH, WINDOW_HEIGHT, "rpg");
     if (win == NULL) {
-        log_fatal("Failed to create window.");
+        log_fatal("Failed to create window.\n");
         return false;
     }
 
     Renderer *rend = renderer_create(win);
+    if (rend == NULL) {
+        log_fatal("Couldn't create the renderer.\n");
+        return false;
+    }
 
     while (!glfwWindowShouldClose(win->glfw_window)) {
         // input

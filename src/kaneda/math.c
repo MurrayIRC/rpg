@@ -365,6 +365,47 @@ void math_matrix_identity(float *matrix) {
     matrix[15] = 1;
 }
 
+void math_translate(float *matrix, const float x, const float y, const float z) {
+    matrix[0 + 4 * 3] = x;
+    matrix[1 + 4 * 3] = y;
+    matrix[2 + 4 * 3] = z;
+}
+
+void math_scale(float *matrix, const float x, const float y, const float z) {
+    matrix[0 + 0 * 4] = x;
+    matrix[1 + 1 * 4] = y;
+    matrix[2 + 2 * 4] = z;
+}
+
+void math_rotate(float *matrix, const float angle, const float axis_x, const float axis_y,
+                 const float axis_z) {
+    float a = angle;
+    float c = (float)cos(a);
+    float s = (float)sin(a);
+
+    float n_axis[3] = {axis_x, axis_y, axis_z};
+    math_normalize3d(&n_axis);
+
+    float x = n_axis[0];
+    float y = n_axis[1];
+    float z = n_axis[2];
+
+    // First column
+    matrix[0 + 0 * 4] = x * x * (1 - c) + c;
+    matrix[1 + 0 * 4] = x * y * (1 - c) + z * s;
+    matrix[2 + 0 * 4] = x * z * (1 - c) - y * s;
+
+    // Second column
+    matrix[0 + 1 * 4] = x * y * (1 - c) - z * s;
+    matrix[1 + 1 * 4] = y * y * (1 - c) + c;
+    matrix[2 + 1 * 4] = y * z * (1 - c) + x * s;
+
+    // Third column
+    matrix[0 + 2 * 4] = x * z * (1 - c) + y * s;
+    matrix[1 + 2 * 4] = y * z * (1 - c) - x * s;
+    matrix[2 + 2 * 4] = z * z * (1 - c) + c;
+}
+
 void math_transform3d(float *output, const float *matrix, const float x, const float y,
                       const float z) {
     output[0] = (matrix[0] * x) + (matrix[4] * y) + (matrix[8] * z) + matrix[12];
