@@ -6,6 +6,9 @@
 #include "window.h"
 
 typedef struct {
+    uint32 width;
+    uint32 height;
+
     Shader *simple_shader;
     GLuint vao;
     GLuint vbo;
@@ -14,8 +17,7 @@ typedef struct {
     unsigned int tex_container;
     unsigned int tex_face;
 
-    GLuint mvp_uniform_id;
-    float mvp[16];
+    float *cube_positions;
 } Renderer;
 
 Renderer *renderer_create(Window *win);

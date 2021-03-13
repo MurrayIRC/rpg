@@ -365,13 +365,28 @@ void math_matrix_identity(float *matrix) {
     matrix[15] = 1;
 }
 
+/*
+0,  1,  2,  3,
+4,  5,  6,  7,
+8,  9,  10, 11,
+12, 13, 14, 15
+*/
+
+/*
+0, 4, 8,  12
+1, 5, 9,  13
+2, 6, 10, 14
+3, 7, 11, 15
+*/
 void math_translate(float *matrix, const float x, const float y, const float z) {
+    math_matrix_identity(matrix);
     matrix[0 + 4 * 3] = x;
     matrix[1 + 4 * 3] = y;
     matrix[2 + 4 * 3] = z;
 }
 
 void math_scale(float *matrix, const float x, const float y, const float z) {
+    math_matrix_identity(matrix);
     matrix[0 + 0 * 4] = x;
     matrix[1 + 1 * 4] = y;
     matrix[2 + 2 * 4] = z;

@@ -8,6 +8,11 @@ Renderer *renderer_create(Window *win) {
     Renderer *renderer;
     renderer = malloc(sizeof(*renderer));
 
+    renderer->width = win->width;
+    renderer->height = win->height;
+
+    glEnable(GL_DEPTH_TEST);
+
     renderer->simple_shader = shader_create("shaders/simple.vert", "shaders/simple.frag", NULL);
     if (renderer->simple_shader == NULL) {
         log_fatal("Couldn't create the shader.\n");
@@ -16,28 +21,43 @@ Renderer *renderer_create(Window *win) {
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    float vertices[] = {
-        // positions        // texture coords
-        0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // top right
-        0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-        -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  // top left
-    };
-    unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
+    float vertices[] = {-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+                        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+                        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+                        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+                        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+                        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+                        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+                        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+                        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+
+                        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+                        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+                        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+                        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+                        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+                        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+                        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+                        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+    float cube_positions[30] = {0.0f,  0.0f,  0.0f,  2.0f,   5.0f,  -15.0f, -1.5f, -2.2f,
+                                -2.5f, -3.8f, -2.0f, -12.3f, 2.4f,  -0.4f,  -3.5f, -1.7f,
+                                3.0f,  -7.5f, 1.3f,  -2.0f,  -2.5f, 1.5f,   2.0f,  -2.5f,
+                                1.5f,  0.2f,  -1.5f, -1.3f,  1.0f,  -1.5f};
+    renderer->cube_positions = &cube_positions;
+
     glGenVertexArrays(1, &renderer->vao);
     glGenBuffers(1, &renderer->vbo);
-    glGenBuffers(1, &renderer->ebo);
+    // glGenBuffers(1, &renderer->ebo);
 
     glBindVertexArray(renderer->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -96,31 +116,45 @@ Renderer *renderer_create(Window *win) {
 
 void renderer_draw_frame(Renderer *renderer) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, renderer->tex_container);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, renderer->tex_face);
 
+    shader_use(renderer->simple_shader);
+
     // create transformations
-    float transform[16];
-    math_matrix_identity(&transform);
-    math_translate(&transform, 0.5f, -0.5f, 0.0f);
-    math_rotate(&transform, (float)glfwGetTime(), 0.0f, 0.0f, 1.0f);
+    float view[16];
+    math_matrix_identity(&view);
+    float projection[16];
+    math_matrix_identity(&projection);
+
+    math_perspective(&projection, 45.0f, (float)renderer->width / (float)renderer->height, 0.1f,
+                     100.0f);
+    math_translate(&view, 0.0f, 0.0f, -3.0f);
 
     // get matrix's uniform location and set matrix
-    shader_use(renderer->simple_shader);
-    shader_set_mat4(renderer->simple_shader, "transform", &transform);
+    shader_set_mat4(renderer->simple_shader, "projection", &projection);
+    shader_set_mat4(renderer->simple_shader, "view", &view);
 
     glBindVertexArray(renderer->vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    for (uint32 i = 0; i < 10; i++) {
+        float model[16];
+        math_translate(&model, renderer->cube_positions[i * 3], renderer->cube_positions[1 + i * 3],
+                       renderer->cube_positions[2 + i * 3]);
+        float angle = 20.0f * i + (float)glfwGetTime();
+        // math_rotate(&model, angle, 1.0f, 0.3f, 0.5f);
+        shader_set_mat4(renderer->simple_shader, "model", &model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 }
 
 void renderer_destroy(Renderer *renderer) {
     glDeleteVertexArrays(1, &renderer->vao);
     glDeleteBuffers(1, &renderer->vbo);
-    glDeleteBuffers(1, &renderer->ebo);
+    // glDeleteBuffers(1, &renderer->ebo);
 
     shader_destroy(renderer->simple_shader);
     free(renderer);
