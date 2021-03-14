@@ -4,6 +4,7 @@
 #include "kore.h"
 #include "shader.h"
 #include "window.h"
+#include "camera.h"
 #include "math.h"
 
 typedef struct {
@@ -19,6 +20,14 @@ typedef struct {
     unsigned int tex_face;
 
     vec3 *cube_positions;
+
+    Camera *camera;
+    float last_x;
+    float last_y;
+    bool first_mouse;
+
+    float delta_time;
+    float last_frame;
 } Renderer;
 
 Renderer *renderer_create(Window *win);

@@ -1,7 +1,8 @@
 #include "app.h"
+#include "input.h"
+#include "window.h"
 #include "renderer.h"
 #include "shader.h"
-#include "window.h"
 
 #include "log.h"
 
@@ -21,7 +22,7 @@ bool app_run(void) {
     while (!glfwWindowShouldClose(win->glfw_window)) {
         // input
         // -----
-        window_process_input(win);
+        input_process(win);
 
         // render
         // ------

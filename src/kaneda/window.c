@@ -1,4 +1,5 @@
 #include "window.h"
+#include "input.h"
 #include "log.h"
 #include <assert.h>
 
@@ -29,7 +30,15 @@ Window *window_create(const int32 w, const int32 h, const char *name) {
         return NULL;
     }
     glfwMakeContextCurrent(window->glfw_window);
+
+    // SET GLFW CALLBACKS FOR INPUT, WINDOW EVENTS, ETC.
     glfwSetFramebufferSizeCallback(window->glfw_window, window_framebuffer_size_callback);
+    glfwSetCursorPosCallback(window->glfw_window, input_mouse_callback);
+    glfwSetScrollCallback(window->glfw_window, input_scroll_callback);
+
+    // Tell GLFW to capture the mouse.
+    // TODO: handle this in input
+    // glfwSetInputMode(window->glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
@@ -39,12 +48,6 @@ Window *window_create(const int32 w, const int32 h, const char *name) {
     log_info("Loaded OpenGL %d.%d.\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
     return window;
-}
-
-void window_process_input(Window *window) {
-    if (glfwGetKey(window->glfw_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window->glfw_window, true);
-    }
 }
 
 void window_framebuffer_size_callback(GLFWwindow *window, int width, int height) {

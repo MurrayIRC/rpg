@@ -32,6 +32,7 @@
 		"ios": "c",
 		"xiosbase": "c",
 		"renderer.h": "c",
-		"gl.h": "c"
+		"gl.h": "c",
+		"list": "c"
 	}
 }

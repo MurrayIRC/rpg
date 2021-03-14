@@ -11,6 +11,12 @@ Renderer *renderer_create(Window *win) {
     renderer->width = win->width;
     renderer->height = win->height;
 
+    renderer->camera = camera_create(math_vec3(0.0f, 0.0f, 3.0f), math_vec3(0.0f, 1.0f, 0.0f),
+                                     CAMERA_DEFAULT_YAW, CAMERA_DEFAULT_PITCH);
+    renderer->last_x = renderer->width / 2.0f;
+    renderer->last_y = renderer->height / 2.0f;
+    renderer->first_mouse = true;
+
     glEnable(GL_DEPTH_TEST);
 
     renderer->simple_shader = shader_create("shaders/simple.vert", "shaders/simple.frag", NULL);
@@ -44,19 +50,12 @@ Renderer *renderer_create(Window *win) {
                         -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
                         0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
                         -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
-    
-    vec3 cubes[] = {
-        math_vec3( 0.0f,  0.0f,  0.0f),
-        math_vec3( 2.0f,  5.0f, -15.0f),
-        math_vec3(-1.5f, -2.2f, -2.5f),
-        math_vec3(-3.8f, -2.0f, -12.3f),
-        math_vec3( 2.4f, -0.4f, -3.5f),
-        math_vec3(-1.7f,  3.0f, -7.5f),
-        math_vec3( 1.3f, -2.0f, -2.5f),
-        math_vec3( 1.5f,  2.0f, -2.5f),
-        math_vec3( 1.5f,  0.2f, -1.5f),
-        math_vec3(-1.3f,  1.0f, -1.5f)
-    };
+
+    vec3 cubes[] = {math_vec3(0.0f, 0.0f, 0.0f),    math_vec3(2.0f, 5.0f, -15.0f),
+                    math_vec3(-1.5f, -2.2f, -2.5f), math_vec3(-3.8f, -2.0f, -12.3f),
+                    math_vec3(2.4f, -0.4f, -3.5f),  math_vec3(-1.7f, 3.0f, -7.5f),
+                    math_vec3(1.3f, -2.0f, -2.5f),  math_vec3(1.5f, 2.0f, -2.5f),
+                    math_vec3(1.5f, 0.2f, -1.5f),   math_vec3(-1.3f, 1.0f, -1.5f)};
     renderer->cube_positions = &cubes;
 
     glGenVertexArrays(1, &renderer->vao);
@@ -124,6 +123,10 @@ Renderer *renderer_create(Window *win) {
 }
 
 void renderer_draw_frame(Renderer *renderer) {
+    float current_frame = (float)glfwGetTime();
+    renderer->delta_time = current_frame - renderer->last_frame;
+    renderer->last_frame = current_frame;
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -134,23 +137,25 @@ void renderer_draw_frame(Renderer *renderer) {
 
     shader_use(renderer->simple_shader);
 
-    // create transformations
-    mat4 view = math_mat4_identity();
-    view = math_translate(view, math_vec3(0.0f, 0.0f, -3.0f));
-
+    // pass projection to shader
     mat4 projection = math_mat4_identity();
-    projection = math_perspective(45.0f, (float)renderer->width / (float)renderer->height, 0.1f, 100.0f);
-
-    // get matrix's uniform location and set matrix
+    projection = math_perspective(renderer->camera->zoom,
+                                  (float)renderer->width / (float)renderer->height, 0.1f, 100.0f);
+    // projection = math_orthographic(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
     shader_set_mat4(renderer->simple_shader, "projection", &projection.elements);
+
+    // camera/view transformation
+    mat4 view = camera_get_view_matrix(renderer->camera);
     shader_set_mat4(renderer->simple_shader, "view", &view.elements);
 
     glBindVertexArray(renderer->vao);
     for (uint32 i = 0; i < 10; i++) {
         mat4 model = math_mat4_identity();
-        model = math_translate(model, renderer->cube_positions[i]);
-        float angle = 20.0f * i + (float)glfwGetTime();
-        model = math_rotate(model, angle, math_vec3(1.0f, 0.3f, 0.5f));
+        model = math_translate(renderer->cube_positions[i]);
+        float angle = 20.0f * i;
+        mat4 rotation = math_rotate(angle, math_vec3(1.0f, 0.3f, 0.5f));
+        model = math_mat4_multiply(model, rotation);
+
         shader_set_mat4(renderer->simple_shader, "model", &model.elements);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
@@ -162,6 +167,7 @@ void renderer_destroy(Renderer *renderer) {
     // glDeleteBuffers(1, &renderer->ebo);
 
     shader_destroy(renderer->simple_shader);
+    camera_destroy(renderer->camera);
     free(renderer);
 }
 

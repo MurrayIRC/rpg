@@ -15,7 +15,6 @@ typedef struct {
 } Window;
 
 Window *window_create(const int32 w, const int32 h, const char *name);
-void window_process_input(Window *window);
 void window_framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void window_destroy(Window *window);
 
