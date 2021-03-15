@@ -28,11 +28,13 @@
 		"type_traits": "c",
 		"xlocnum": "c",
 		"xtr1common": "c",
-		"kore.h": "c",
+		"core.h": "c",
 		"ios": "c",
 		"xiosbase": "c",
 		"renderer.h": "c",
 		"gl.h": "c",
-		"list": "c"
+		"list": "c",
+		"fstream": "c",
+		"xlocale": "c"
 	}
 }

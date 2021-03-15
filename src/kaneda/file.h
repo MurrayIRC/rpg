@@ -1,11 +1,11 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "kore.h"
+#include "core.h"
 #include <stdio.h>
 
 typedef enum file_mode {
-    /* Reads text from a file. 
+    /* Reads text from a file.
     The file must exist */
     FILE_MODE_READ,
     /* Reads binary data from a file.
@@ -37,13 +37,13 @@ typedef struct file {
     const char *path;
     uint32 size;
     FILE *fp;
-} *file;
+} * file;
 
-/*  
+/*
     Opens a file from the given path for read/write operations
         \param path The file path
         \param mode The read/write mode to open the file with
-        \return The file object 
+        \return The file object
 */
 file file_open(const char *path, file_mode mode);
 
@@ -59,7 +59,7 @@ uint32 file_get_size(file f);
         \param f The file object
         \return The file path
 */
-const char* file_get_path(file f);
+const char *file_get_path(file f);
 
 /*
     Reads data from a file
@@ -96,6 +96,6 @@ void file_close(file f);
     Gets the current path that the process is running from.
         \return The path that it's running on
 */
-char* file_current_path(void);
+char *file_current_path(void);
 
 #endif

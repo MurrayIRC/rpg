@@ -1,7 +1,7 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
-#include "kore.h"
+#include "core.h"
 #include "device.h"
 
 typedef struct {
@@ -26,10 +26,11 @@ typedef struct {
     VkShaderModule frag_shader_module;
 } RenderPipeline;
 
-RenderPipeline pipeline_create(RenderDevice *dev, const char *vert_fp, const char *frag_fp, const PipelineConfigInfo* config_info);
+RenderPipeline pipeline_create(RenderDevice *dev, const char *vert_fp, const char *frag_fp,
+                               const PipelineConfigInfo *config_info);
 PipelineConfigInfo pipeline_default_config_info(uint32 width, uint32 height);
-void pipeline_create_shader_module(RenderDevice *dev, const char *code, VkShaderModule *shader_module);
+void pipeline_create_shader_module(RenderDevice *dev, const char *code,
+                                   VkShaderModule *shader_module);
 void pipeline_destroy(RenderPipeline pipeline);
-
 
 #endif

@@ -1,9 +1,8 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include "kore.h"
+#include "core.h"
 #include "shader.h"
-#include "window.h"
 #include "camera.h"
 #include "math.h"
 
@@ -30,7 +29,7 @@ typedef struct {
     float last_frame;
 } Renderer;
 
-Renderer *renderer_create(Window *win);
+Renderer *renderer_create(void);
 void renderer_draw_frame(Renderer *renderer);
 void renderer_destroy(Renderer *renderer);
 

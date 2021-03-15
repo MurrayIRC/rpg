@@ -2,20 +2,21 @@
 
 #include <stdio.h>
 
-int main(void) {
-    if (!app_run()) {
-#ifdef PLATFORM_WIN
-        printf("Press enter to continue...\n");
-        getchar();
-#endif
-
-        return 1;
-    }
-
+void win_leave_console_open(void) {
 #ifdef PLATFORM_WIN
     printf("Press enter to continue...\n");
     getchar();
 #endif
+}
 
+int main(void) {
+    if (!app_run()) {
+        app_shutdown();
+        win_leave_console_open();
+        return 1;
+    }
+
+    app_shutdown();
+    win_leave_console_open();
     return 0;
 }

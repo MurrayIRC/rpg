@@ -24,7 +24,6 @@ set src=^
 	%proj_root_dir%/src/main.c^
 	%proj_root_dir%/src/gl.c^
 	%proj_root_dir%/src/kaneda/app.c^
-	%proj_root_dir%/src/kaneda/window.c^
 	%proj_root_dir%/src/kaneda/input.c^
 	%proj_root_dir%/src/kaneda/renderer.c^
 	%proj_root_dir%/src/kaneda/camera.c^

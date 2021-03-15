@@ -4,12 +4,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Renderer *renderer_create(Window *win) {
+Renderer *renderer_create(void) {
     Renderer *renderer;
     renderer = malloc(sizeof(*renderer));
 
-    renderer->width = win->width;
-    renderer->height = win->height;
+    // renderer->width = win->width;
+    // renderer->height = win->height;
 
     renderer->camera = camera_create(math_vec3(0.0f, 0.0f, 3.0f), math_vec3(0.0f, 1.0f, 0.0f),
                                      CAMERA_DEFAULT_YAW, CAMERA_DEFAULT_PITCH);

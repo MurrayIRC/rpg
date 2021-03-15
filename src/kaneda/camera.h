@@ -1,7 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "kore.h"
+#include "core.h"
 #include "math.h"
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from

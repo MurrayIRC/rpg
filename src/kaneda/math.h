@@ -1,7 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
 
-#include "kore.h"
+#include "core.h"
 #include "log.h"
 #include <assert.h>
 #include <math.h>

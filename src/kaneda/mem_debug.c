@@ -2,18 +2,18 @@
 #include <stdio.h>
 #include <string.h>
 #define NO_MEMORY_DEBUG
-#include "kore.h"
+#include "core.h"
 
 extern void debug_mem_print(uint min_allocs);
 
 #define MEMORY_OVER_ALLOC 32
 #define MEMORY_MAGIC_NUMBER 132
-typedef struct{
+typedef struct {
     uint size;
     void *buf;
 } STMemAllocBuf;
 
-typedef struct{
+typedef struct {
     uint line;
     char file[256];
     STMemAllocBuf *allocs;
@@ -53,8 +53,9 @@ bool debug_memory(void) {
                 }
             }
             if (k < MEMORY_OVER_ALLOC) {
-                printf("MEM ERROR: Overshoot at line %u in file %s\n", alloc_lines[i].line, alloc_lines[i].file);
-                
+                printf("MEM ERROR: Overshoot at line %u in file %s\n", alloc_lines[i].line,
+                       alloc_lines[i].file);
+
                 {
                     uint *X = NULL;
                     X[0] = 0;
@@ -78,7 +79,8 @@ void debug_mem_add(void *pointer, uint size, char *file, uint line) {
 
     for (i = 0; i < alloc_line_count; i++) {
         if (line == alloc_lines[i].line) {
-            for (j = 0; file[j] != 0 && file[j] == alloc_lines[i].file[j]; j++);
+            for (j = 0; file[j] != 0 && file[j] == alloc_lines[i].file[j]; j++)
+                ;
             if (file[j] == alloc_lines[i].file[j]) {
                 break;
             }
@@ -87,7 +89,9 @@ void debug_mem_add(void *pointer, uint size, char *file, uint line) {
     if (i < alloc_line_count) {
         if (alloc_lines[i].alloc_alocated == alloc_lines[i].alloc_count) {
             alloc_lines[i].alloc_alocated += 1024;
-            alloc_lines[i].allocs = realloc(alloc_lines[i].allocs, (sizeof *alloc_lines[i].allocs) * alloc_lines[i].alloc_alocated);
+            alloc_lines[i].allocs =
+                realloc(alloc_lines[i].allocs,
+                        (sizeof *alloc_lines[i].allocs) * alloc_lines[i].alloc_alocated);
         }
         alloc_lines[i].allocs[alloc_lines[i].alloc_count].size = size;
         alloc_lines[i].allocs[alloc_lines[i].alloc_count++].buf = pointer;
@@ -101,7 +105,8 @@ void debug_mem_add(void *pointer, uint size, char *file, uint line) {
             }
             alloc_lines[i].file[j] = 0;
             alloc_lines[i].alloc_alocated = 256;
-            alloc_lines[i].allocs = malloc((sizeof *alloc_lines[i].allocs) * alloc_lines[i].alloc_alocated);
+            alloc_lines[i].allocs =
+                malloc((sizeof *alloc_lines[i].allocs) * alloc_lines[i].alloc_alocated);
             alloc_lines[i].allocs[0].size = size;
             alloc_lines[i].allocs[0].buf = pointer;
             alloc_lines[i].alloc_count = 1;
@@ -122,14 +127,16 @@ void *debug_mem_malloc(uint size, char *file, uint line) {
     pointer = malloc(size + MEMORY_OVER_ALLOC);
 
     if (pointer == NULL) {
-        printf("MEM ERROR: Malloc returns NULL when trying to allocate %u bytes at line %u in file %s\n", size, line, file);
+        printf("MEM ERROR: Malloc returns NULL when trying to allocate %u bytes at line %u in file "
+               "%s\n",
+               size, line, file);
         if (alloc_mutex != NULL)
             alloc_mutex_unlock(alloc_mutex);
         debug_mem_print(0);
         exit(0);
     }
     for (i = 0; i < size + MEMORY_OVER_ALLOC; i++) {
-         ((uint8 *)pointer)[i] = MEMORY_MAGIC_NUMBER + 1;
+        ((uint8 *)pointer)[i] = MEMORY_MAGIC_NUMBER + 1;
     }
     debug_mem_add(pointer, size, file, line);
     if (alloc_mutex != NULL) {
@@ -149,14 +156,15 @@ bool debug_mem_remove(void *buf) {
                     }
                 }
                 if (k < MEMORY_OVER_ALLOC) {
-                    printf("MEM ERROR: Overshoot at line %u in file %s\n", alloc_lines[i].line, alloc_lines[i].file);
+                    printf("MEM ERROR: Overshoot at line %u in file %s\n", alloc_lines[i].line,
+                           alloc_lines[i].file);
                 }
                 alloc_lines[i].size -= alloc_lines[i].allocs[j].size;
                 alloc_lines[i].allocs[j] = alloc_lines[i].allocs[--alloc_lines[i].alloc_count];
                 alloc_lines[i].freed++;
                 return true;
             }
-        }	
+        }
     }
     return false;
 }
@@ -179,9 +187,9 @@ void *debug_mem_realloc(void *pointer, uint size, char *file, uint line) {
     uint i, j, k, move;
     void *pointer2;
     if (pointer == NULL) {
-        return debug_mem_malloc( size, file, line);
+        return debug_mem_malloc(size, file, line);
     }
-    
+
     if (alloc_mutex != NULL) {
         alloc_mutex_lock(alloc_mutex);
     }
@@ -196,14 +204,19 @@ void *debug_mem_realloc(void *pointer, uint size, char *file, uint line) {
         }
     }
     if (i == alloc_line_count) {
-        printf("Mem debugger error. Trying to reallocate pointer %p in %s line %u. Pointer has never been allocated\n", pointer, file, line);
+        printf("Mem debugger error. Trying to reallocate pointer %p in %s line %u. Pointer has "
+               "never been allocated\n",
+               pointer, file, line);
         for (i = 0; i < alloc_line_count; i++) {
             for (j = 0; j < alloc_lines[i].alloc_count; j++) {
                 uint *buf;
                 buf = alloc_lines[i].allocs[j].buf;
                 for (k = 0; k < alloc_lines[i].allocs[j].size; k++) {
                     if (&buf[k] == pointer) {
-                        printf("Trying to reallocate pointer %u bytes (out of %u) into allocation made in %s on line %u.\n", k, alloc_lines[i].allocs[j].size, alloc_lines[i].file, alloc_lines[i].line);
+                        printf("Trying to reallocate pointer %u bytes (out of %u) into allocation "
+                               "made in %s on line %u.\n",
+                               k, alloc_lines[i].allocs[j].size, alloc_lines[i].file,
+                               alloc_lines[i].line);
                     }
                 }
             }
@@ -211,21 +224,23 @@ void *debug_mem_realloc(void *pointer, uint size, char *file, uint line) {
         exit(0);
     }
     move = alloc_lines[i].allocs[j].size;
-    
+
     if (move > size) {
         move = size;
     }
 
     pointer2 = malloc(size + MEMORY_OVER_ALLOC);
     if (pointer2 == NULL) {
-        printf("MEM ERROR: Realloc returns NULL when trying to allocate %u bytes at line %u in file %s\n", size, line, file);
+        printf("MEM ERROR: Realloc returns NULL when trying to allocate %u bytes at line %u in "
+               "file %s\n",
+               size, line, file);
         if (alloc_mutex != NULL)
             alloc_mutex_unlock(alloc_mutex);
         debug_mem_print(0);
         exit(0);
     }
     for (i = 0; i < size + MEMORY_OVER_ALLOC; i++) {
-         ((uint8 *)pointer2)[i] = MEMORY_MAGIC_NUMBER + 1;
+        ((uint8 *)pointer2)[i] = MEMORY_MAGIC_NUMBER + 1;
     }
     memcpy(pointer2, pointer, move);
 
@@ -247,8 +262,9 @@ void debug_mem_print(uint min_allocs) {
     printf("Memory report:\n----------------------------------------------\n");
     for (i = 0; i < alloc_line_count; i++) {
         if (min_allocs < alloc_lines[i].alocated) {
-            printf("%s line: %u\n",alloc_lines[i].file, alloc_lines[i].line);
-            printf(" - Bytes allocated: %u\n - Allocations: %u\n - Frees: %u\n\n", alloc_lines[i].size, alloc_lines[i].alocated, alloc_lines[i].freed);
+            printf("%s line: %u\n", alloc_lines[i].file, alloc_lines[i].line);
+            printf(" - Bytes allocated: %u\n - Allocations: %u\n - Frees: %u\n\n",
+                   alloc_lines[i].size, alloc_lines[i].alocated, alloc_lines[i].freed);
         }
     }
     printf("----------------------------------------------\n");

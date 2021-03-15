@@ -1,7 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "kore.h"
+#include "core.h"
 
 typedef struct {
     GLuint program_id;
@@ -33,11 +33,13 @@ static inline void shader_set_vec2(Shader *shader, const char *name, const float
     glUniform2f(glGetUniformLocation(shader->program_id, name), x, y);
 }
 
-static inline void shader_set_vec3(Shader *shader, const char *name, const float x, const float y, const float z) {
+static inline void shader_set_vec3(Shader *shader, const char *name, const float x, const float y,
+                                   const float z) {
     glUniform3f(glGetUniformLocation(shader->program_id, name), x, y, z);
 }
 
-static inline void shader_set_vec4(Shader *shader, const char *name, const float x, const float y, const float z, const float w) {
+static inline void shader_set_vec4(Shader *shader, const char *name, const float x, const float y,
+                                   const float z, const float w) {
     glUniform4f(glGetUniformLocation(shader->program_id, name), x, y, z, w);
 }
 

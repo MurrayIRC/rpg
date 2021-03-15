@@ -1,15 +1,15 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include "kore.h"
+#include "core.h"
 #include "window.h"
 
-#define NUM_ELEMENTS(a) sizeof(a)/sizeof(*a)
+#define NUM_ELEMENTS(a) sizeof(a) / sizeof(*a)
 
 typedef struct {
     VkSurfaceCapabilitiesKHR capabilities;
-    VkSurfaceFormatKHR* formats;
-    VkPresentModeKHR* presentModes;
+    VkSurfaceFormatKHR *formats;
+    VkPresentModeKHR *presentModes;
 } SwapChainSupportDetails;
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
     VkPhysicalDevice vk_physical_device;
     VkCommandPool command_pool;
     VkRenderPass render_pass;
-    Window* window;
+    Window *window;
 
     VkDevice vk_device;
     VkSurfaceKHR vk_surface;
@@ -41,10 +41,10 @@ typedef struct {
     VkQueue compute_queue;
 } RenderDevice;
 
-static const char* validation_layers[] = { "VK_LAYER_KHRONOS_validation" };
+static const char *validation_layers[] = {"VK_LAYER_KHRONOS_validation"};
 static const uint32 num_validation_layers = 1;
 
-static const char* device_extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static const char *device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 static const uint32 num_device_extensions = 1;
 
 /* device functions */
@@ -60,24 +60,32 @@ void device_create_render_pass(RenderDevice *device);
 void device_create_command_pool(RenderDevice *device);
 
 uint32 device_find_memory_type(uint32 type_filter, VkMemoryPropertyFlags properties);
-VkFormat device_find_supported_format(const VkFormat* candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+VkFormat device_find_supported_format(const VkFormat *candidates, VkImageTiling tiling,
+                                      VkFormatFeatureFlags features);
 
 /* buffer helper functions */
-void device_create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* buffer, VkDeviceMemory* buffer_memory);
+void device_create_buffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                          VkMemoryPropertyFlags properties, VkBuffer *buffer,
+                          VkDeviceMemory *buffer_memory);
 VkCommandBuffer device_begin_single_time_commands(void);
 void device_end_single_time_commands(VkCommandBuffer command_buffer);
 void device_copy_buffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
-void device_copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32 width, uint32 height, uint32 layer_count);
+void device_copy_buffer_to_image(VkBuffer buffer, VkImage image, uint32 width, uint32 height,
+                                 uint32 layer_count);
 
-void device_create_image_with_info(const VkImageCreateInfo* image_info, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* image_memory);
+void device_create_image_with_info(const VkImageCreateInfo *image_info,
+                                   VkMemoryPropertyFlags properties, VkImage *image,
+                                   VkDeviceMemory *image_memory);
 
 bool device_is_device_suitable(RenderDevice *device, VkPhysicalDevice physical_device);
-const char **device_get_required_extensions(uint32* pCount);
+const char **device_get_required_extensions(uint32 *pCount);
 bool device_check_validation_layer_support(void);
 bool device_is_queue_family_complete(QueueFamilyIndices *qf);
-QueueFamilyIndices *device_find_queue_families(RenderDevice *device, VkPhysicalDevice physical_device);
+QueueFamilyIndices *device_find_queue_families(RenderDevice *device,
+                                               VkPhysicalDevice physical_device);
 void device_check_instance_extension_support();
 bool device_check_device_extension_support(VkPhysicalDevice device);
-SwapChainSupportDetails device_query_swap_chain_support(RenderDevice *device, VkPhysicalDevice physical_device);
+SwapChainSupportDetails device_query_swap_chain_support(RenderDevice *device,
+                                                        VkPhysicalDevice physical_device);
 
 #endif

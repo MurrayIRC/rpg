@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "kore.h"
+#include "core.h"
 #include <vulkan/vulkan.h>
 
 typedef struct TextureData {
@@ -9,7 +9,7 @@ typedef struct TextureData {
     void *pixels;
 } TextureData;
 
-/* 
+/*
 Creates a texture data object from an image file
     \param file The path to the image
     \return The texturedata object
@@ -17,8 +17,8 @@ Creates a texture data object from an image file
 TextureData *texture_create_from_file(const char *file);
 
 /*
-Destroys and frees a texture data object. (It's important to do this, those texture datas are uncompressed and take a lot of memory)
-    \param data The texture data to free
+Destroys and frees a texture data object. (It's important to do this, those texture datas are
+uncompressed and take a lot of memory) \param data The texture data to free
     */
 void texture_data_destroy(TextureData *data);
 
@@ -30,8 +30,7 @@ typedef enum TextureFormat {
     TEXTURE_FORMAT_COUNT,
 } TextureFormat;
 
-typedef enum TextureFilter
-{
+typedef enum TextureFilter {
     /* Linearly interpolates sampling when the texture is scaled up */
     TEXTURE_FILTER_LINEAR = VK_FILTER_LINEAR,
     /* Chooses the nearest texel when the texture is scaled up */
@@ -41,8 +40,7 @@ typedef enum TextureFilter
     TEXTURE_FILTER_COUNT,
 } TextureFilter;
 
-typedef enum TextureAddressMode
-{
+typedef enum TextureAddressMode {
     /* Repeats texture sampling outside the uv bounds */
     TEXTURE_ADDRESS_MODE_REPEAT = VK_SAMPLER_ADDRESS_MODE_REPEAT,
     /* Mirrored repeats sampling outside the uv bounds */
@@ -52,8 +50,7 @@ typedef enum TextureAddressMode
     TEXTURE_ADDRESS_MODE_COUNT,
 } TextureAddressMode;
 
-typedef struct TextureConfigure
-{
+typedef struct TextureConfigure {
     /* The width of the texture to create. */
     /* Ignored if LoadFromData is true */
     uint32 wifth;
@@ -77,15 +74,14 @@ typedef struct TextureConfigure
     TextureData *data;
 } TextureConfigure;
 
-typedef struct Texture
-{
+typedef struct Texture {
     uint32 width, height;
     TextureFormat format;
     VkImage image;
     /*VmaAllocation Allocation; */
     VkImageView image_view;
     VkSampler sampler;
-} *Texture;
+} * Texture;
 
 /*
 Creates a texture object from a configuration
@@ -94,15 +90,16 @@ Creates a texture object from a configuration
 */
 Texture *texture_create(TextureConfigure config);
 
-/* 
-Places the texture into a queue to be destroyed. This should only be called if the texture needs to be destroyed at render-time
-    \param texture The texture to destroy
+/*
+Places the texture into a queue to be destroyed. This should only be called if the texture needs to
+be destroyed at render-time \param texture The texture to destroy
 */
 void texture_queue_destroy(Texture *texture);
 
-/* 
-Destroys and frees a texture object. Don't call this unless it's at the initialize or the deinitialize of the application, otherwise use TextureQueueDestroy
-    \param texture The texture to destroy 
+/*
+Destroys and frees a texture object. Don't call this unless it's at the initialize or the
+deinitialize of the application, otherwise use TextureQueueDestroy \param texture The texture to
+destroy
 */
 void texture_destroy(Texture *texture);
 

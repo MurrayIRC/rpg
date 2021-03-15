@@ -1,8 +1,8 @@
 /* credit for this module lies entirely with Eskil Steenberg. Some of his code has been adapted here
  * for my purposes, with some minor convenience edits. see http://gamepipeline.org/ for more. */
 
-#ifndef KORE_H
-#define KORE_H
+#ifndef CORE_H
+#define CORE_H
 
 /* Platform Apple */
 #if (defined __APPLE__ || defined _APPLE)
@@ -104,5 +104,86 @@ extern bool debug_memory(
 extern void exit_crash(uint i); /* function guaranteed to crash (Writes to NULL).*/
 #define exit(n) exit_crash(n)   /* overwriting exit(0) with a function guaraneed to crash. */
 #endif
+
+#ifndef MAX_GAMEPADS
+#define MAX_GAMEPADS 4 // Max number of gamepads supported
+#endif
+#ifndef MAX_GAMEPAD_AXES
+#define MAX_GAMEPAD_AXES 8 // Max number of axes supported (per gamepad)
+#endif
+#ifndef MAX_GAMEPAD_BUTTONS
+#define MAX_GAMEPAD_BUTTONS 32 // Max number of buttons supported (per gamepad)
+#endif
+#ifndef MAX_CHAR_PRESSED_QUEUE
+#define MAX_CHAR_PRESSED_QUEUE 16 // Max number of characters in the char input queue
+#endif
+#ifndef MAX_KEYS_PRESSABLE
+#define MAX_KEYS_PRESSABLE 16 // Max number of keys in the key input queue
+#endif
+
+#include "math.h"
+
+typedef struct CoreData {
+    struct {
+        GLFWwindow *glfw_window;
+        const char *title;
+
+        uint32 flags; // configuration flags for the window (bit-based)
+        bool is_fullscreen;
+        bool should_close;
+        bool was_resized_last_frame;
+
+        vec2i position;           // window position on screen
+        vec2i display_size;       // display width & height (monitor, device screen, etc)
+        vec2i screen_size;        // screen width & height (used render area)
+        vec2i framebuffer_size;   // framebuffer width & height
+        mat4 screen_scale_matrix; // for framebuffer rendering
+    } Window;
+    struct {
+        struct {
+            int32 exit_key;               // default exit key
+            char key_state_current[512];  // registers current frame key-state
+            char key_state_previous[512]; // registers previous frame key-state
+
+            int32 key_pressed_queue[MAX_KEYS_PRESSABLE]; // Input keys queue
+            uint32 num_keys_pressed;                     // Input keys queue count
+
+            int32 char_pressed_queue[MAX_CHAR_PRESSED_QUEUE]; // Input characters queue
+            uint32 num_chars_pressed;                         // Input characters queue count
+        } Keyboard;
+        struct {
+            vec2 position;
+            vec2 offset;
+            vec2 scale;
+
+            int32 cursor; // tracks current mouse cursor.
+            bool is_cursor_hidden;
+            bool is_cursor_inside_client;
+
+            char button_state_current[5];
+            char button_state_previous[5];
+            float wheel_move_current;  // registers current mouse wheel variation
+            float wheel_move_previous; // registers previous mouse wheel variation
+        } Mouse;
+        struct {
+            int32 last_button_pressed;   // registers the last gamepad button pressed
+            int32 num_available_axes;    // registers the number of available gamepad axes
+            bool is_ready[MAX_GAMEPADS]; // flag for gamepad readiness
+            float axis_state[MAX_GAMEPADS][MAX_GAMEPAD_AXES]; // gamepad axis states
+            char button_state_current[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
+            char button_state_previous[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
+        } Gamepad;
+    } Input;
+    struct {
+        double current;  // Current time measure
+        double previous; // Previous time measure
+        double update;   // Time measure for frame update
+        double draw;     // Time measure for frame draw
+        double frame;    // Time measure for one frame
+        double target;   // Desired time for one frame, if 0 not applied
+    } Time;
+} CoreData;
+
+static CoreData CORE = {0};
 
 #endif
