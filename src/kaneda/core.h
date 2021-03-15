@@ -132,11 +132,15 @@ typedef struct CoreData {
         bool is_fullscreen;
         bool should_close;
         bool was_resized_last_frame;
+        bool vsync;
+        bool high_dpi;
 
-        vec2i position;           // window position on screen
-        vec2i display_size;       // display width & height (monitor, device screen, etc)
-        vec2i screen_size;        // screen width & height (used render area)
-        vec2i framebuffer_size;   // framebuffer width & height
+        vec2i position;     // window position on screen
+        vec2i display_size; // display width & height (monitor, device screen, etc)
+        vec2i screen_size;  // screen width & height (used render area)
+        vec2i current_fbo; // Current render width and height, it could change on BeginTextureMode()
+        vec2i render_size; // framebuffer width & height
+        vec2i render_offset;      // Offset from render area (must be divided by 2)
         mat4 screen_scale_matrix; // for framebuffer rendering
     } Window;
     struct {

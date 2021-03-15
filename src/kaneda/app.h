@@ -14,6 +14,25 @@ void app_shutdown(void);
 bool app_init_glfw(void);
 bool app_init_window(const uint32 w, const uint32 h, const char *name);
 bool app_init_renderer(const uint32 w, const uint32 h);
-void window_framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void app_init_timer(void);
+
+int app_get_current_monitor(void);
+
+// core update functions --------------
+void app_poll_input(void);
+// ------------------------------------
+
+// window functions -------------------
+void app_window_toggle_fullscreen(void);
+void app_window_maximize(void);
+void app_window_minimize(void);
+void app_window_set_title(const char *title);
+// ------------------------------------
+
+// frame & time -----------------------
+void app_wait(float ms);
+void app_set_fps_target(int fps);
+float app_get_fps(void);
+// ------------------------------------
 
 #endif
