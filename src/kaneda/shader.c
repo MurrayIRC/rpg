@@ -2,26 +2,24 @@
 #include "file.h"
 #include "log.h"
 
-Shader *shader_create(const char *vert_path, const char *frag_path, const char *geom_path) {
+bool shader_create(Shader *shader, const char *vert_path, const char *frag_path,
+                   const char *geom_path) {
     if (vert_path == NULL || frag_path == NULL) {
         log_fatal("Vertex or Fragment shader paths not specified in shader creation.\n");
-        return NULL;
+        return false;
     }
-
-    Shader *shader;
-    shader = malloc(sizeof(*shader));
 
     // Read the Vertex Shader code from the file
     const char *vert_code = (const char *)shader_read_from_file(vert_path);
     if (vert_code == NULL) {
         log_error("Unable to read vertex shader code. Check the file path.");
-        return NULL;
+        return false;
     }
 
     const char *frag_code = (const char *)shader_read_from_file(frag_path);
     if (frag_code == NULL) {
         log_error("Unable to read fragment shader code. Check the file path.");
-        return NULL;
+        return false;
     }
 
     // Create the shaders
@@ -45,7 +43,7 @@ Shader *shader_create(const char *vert_path, const char *frag_path, const char *
         const char *geom_code = (const char *)shader_read_from_file(frag_path);
         if (geom_code == NULL) {
             log_error("Unable to read geometry shader code. Check the file path.");
-            return NULL;
+            return false;
         }
         geom_shader_id = glCreateShader(GL_GEOMETRY_SHADER);
         log_info("Compiling shader: %s\n", geom_path);
@@ -73,7 +71,7 @@ Shader *shader_create(const char *vert_path, const char *frag_path, const char *
     }
 
     shader->program_id = program_id;
-    return shader;
+    return true;
 }
 
 char *shader_read_from_file(const char *path) {
@@ -122,5 +120,4 @@ void shader_check_program_compile_errors(GLuint program_id) {
 
 void shader_destroy(Shader *shader) {
     glDeleteProgram(shader->program_id);
-    free(shader);
 }

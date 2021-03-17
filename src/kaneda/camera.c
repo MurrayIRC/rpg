@@ -25,10 +25,6 @@ void camera_update(Camera *cam) {
     cam->up = math_vec3_normalize(math_vec3_cross(cam->right, cam->front));
 }
 
-void camera_destroy(Camera *cam) {
-    free(cam);
-}
-
 mat4 camera_get_view_matrix(Camera *cam) {
     return math_lookat(cam->position, math_vec3_add(cam->position, cam->front), cam->up);
 }

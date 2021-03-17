@@ -168,9 +168,9 @@ bool app_init_window(const uint32 w, const uint32 h, const char *name) {
         if (CORE.Window.glfw_window != NULL) {
             // Center window on screen
             int32 window_pos_x =
-                CORE.Window.display_size.width / 2 - CORE.Window.display_size.width / 2;
+                CORE.Window.display_size.width / 2 - CORE.Window.screen_size.width / 2;
             int32 window_pos_y =
-                CORE.Window.display_size.height / 2 - CORE.Window.display_size.height / 2;
+                CORE.Window.display_size.height / 2 - CORE.Window.screen_size.height / 2;
 
             if (window_pos_x < 0) {
                 window_pos_x = 0;

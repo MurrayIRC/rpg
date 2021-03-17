@@ -9,7 +9,8 @@ typedef struct {
 
 /* geom_path can be NULL, because we might not always want to specify it, but
     vert_path & frag_path should always have values.*/
-Shader *shader_create(const char *vert_path, const char *frag_path, const char *geom_path);
+bool shader_create(Shader *shader, const char *vert_path, const char *frag_path,
+                   const char *geom_path);
 void shader_destroy(Shader *shader);
 char *shader_read_from_file(const char *path);
 void shader_use(Shader *shader);

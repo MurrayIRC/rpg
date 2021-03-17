@@ -33,7 +33,6 @@ typedef struct {
 
 Camera *camera_create(vec3 pos, vec3 up, float yaw, float pitch);
 void camera_update(Camera *cam);
-void camera_destroy(Camera *cam);
 
 // returns the view matrix calculated using Euler Angles and the LookAt Matrix
 mat4 camera_get_view_matrix(Camera *cam);

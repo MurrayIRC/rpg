@@ -146,7 +146,6 @@ typedef struct CoreData {
         mat4 screen_scale_matrix; // for framebuffer rendering
     } Window;
     struct {
-        Shader *simple_shader;
         GLuint vao;
         GLuint vbo;
         GLuint ebo;
@@ -155,8 +154,6 @@ typedef struct CoreData {
         unsigned int tex_face;
 
         vec3 cube_pos;
-
-        Camera *camera;
     } Renderer;
     struct {
         struct {

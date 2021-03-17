@@ -3,6 +3,12 @@
 
 #include "core.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+Shader shader;
+Camera camera;
+
 static inline bool renderer_init(const uint32 w, const uint32 h) {
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
@@ -20,8 +26,7 @@ static inline bool renderer_init(const uint32 w, const uint32 h) {
 
     glEnable(GL_DEPTH_TEST);
 
-    CORE.Renderer.simple_shader = shader_create("shaders/simple.vert", "shaders/simple.frag", NULL);
-    if (CORE.Renderer.simple_shader == NULL) {
+    if (!shader_create(&shader, "shaders/simple.vert", "shaders/simple.frag", NULL)) {
         log_fatal("Couldn't create the shader.\n");
         return false;
     }
@@ -110,9 +115,9 @@ static inline bool renderer_init(const uint32 w, const uint32 h) {
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
-    shader_use(CORE.Renderer.simple_shader);
-    shader_set_int(CORE.Renderer.simple_shader, "texture1", 0);
-    shader_set_int(CORE.Renderer.simple_shader, "texture2", 1);
+    shader_use(&shader);
+    shader_set_int(&shader, "texture1", 0);
+    shader_set_int(&shader, "texture2", 1);
 
     return true;
 }
@@ -126,19 +131,19 @@ static inline void renderer_draw_frame() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, CORE.Renderer.tex_face);
 
-    shader_use(CORE.Renderer.simple_shader);
+    shader_use(&shader);
 
     // pass projection to shader
     mat4 projection = math_mat4_identity();
     projection = math_perspective(
-        CORE.Renderer.camera->zoom,
-        (float)CORE.Window.render_size.width / (float)CORE.Window.render_size.height, 0.1f, 100.0f);
+        camera.zoom, (float)CORE.Window.render_size.width / (float)CORE.Window.render_size.height,
+        0.1f, 100.0f);
     // projection = math_orthographic(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
-    shader_set_mat4(CORE.Renderer.simple_shader, "projection", &projection.elements);
+    shader_set_mat4(&shader, "projection", &projection.elements);
 
     // camera/view transformation
-    mat4 view = camera_get_view_matrix(CORE.Renderer.camera);
-    shader_set_mat4(CORE.Renderer.simple_shader, "view", &view.elements);
+    mat4 view = camera_get_view_matrix(&camera);
+    shader_set_mat4(&shader, "view", &view.elements);
 
     glBindVertexArray(CORE.Renderer.vao);
 
@@ -148,7 +153,7 @@ static inline void renderer_draw_frame() {
     mat4 rotation = math_rotate(angle, math_vec3(1.0f, 0.3f, 0.5f));
     model = math_mat4_multiply(model, rotation);
 
-    shader_set_mat4(CORE.Renderer.simple_shader, "model", &model.elements);
+    shader_set_mat4(&shader, "model", &model.elements);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
@@ -157,8 +162,7 @@ static inline void renderer_cleanup() {
     glDeleteBuffers(1, &CORE.Renderer.vbo);
     // glDeleteBuffers(1, &renderer->ebo);
 
-    shader_destroy(CORE.Renderer.simple_shader);
-    camera_destroy(CORE.Renderer.camera);
+    shader_destroy(&shader);
 }
 
 #endif
