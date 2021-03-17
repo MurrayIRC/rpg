@@ -122,6 +122,8 @@ extern void exit_crash(uint i); /* function guaranteed to crash (Writes to NULL)
 #endif
 
 #include "math.h"
+#include "shader.h"
+#include "camera.h"
 
 typedef struct CoreData {
     struct {
@@ -143,6 +145,19 @@ typedef struct CoreData {
         vec2i render_offset;      // Offset from render area (must be divided by 2)
         mat4 screen_scale_matrix; // for framebuffer rendering
     } Window;
+    struct {
+        Shader *simple_shader;
+        GLuint vao;
+        GLuint vbo;
+        GLuint ebo;
+
+        unsigned int tex_container;
+        unsigned int tex_face;
+
+        vec3 cube_pos;
+
+        Camera *camera;
+    } Renderer;
     struct {
         struct {
             int32 exit_key;               // default exit key

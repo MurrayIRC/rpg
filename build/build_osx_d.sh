@@ -25,7 +25,6 @@ src=(
 	${proj_root_dir}/src/kaneda/app.c
 	${proj_root_dir}/src/kaneda/camera.c
 	${proj_root_dir}/src/kaneda/shader.c
-	${proj_root_dir}/src/kaneda/renderer.c
 	${proj_root_dir}/src/kaneda/mem_debug.c
 	${proj_root_dir}/src/kaneda/file.c
 	${proj_root_dir}/src/kaneda/log.c

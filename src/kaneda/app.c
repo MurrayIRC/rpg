@@ -1,6 +1,5 @@
 #include "app.h"
 #include "renderer.h"
-#include "shader.h"
 #include "callbacks.h"
 #include "input.h"
 #include "log.h"
@@ -21,7 +20,7 @@ bool app_run(void) {
     }
     app_init_timer();
 
-    if (!app_init_renderer(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+    if (!renderer_init(WINDOW_WIDTH, WINDOW_HEIGHT)) {
         log_fatal("Couldn't initialize the renderer.\n");
         return false;
     }
@@ -37,7 +36,7 @@ bool app_run(void) {
 
         // RENDER HERE
         // ------
-        // renderer_draw_frame(rend);
+        renderer_draw_frame();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -59,7 +58,7 @@ bool app_run(void) {
         input_poll();
     }
 
-    // renderer_destroy(rend);
+    renderer_cleanup();
 
     return true;
 }
@@ -242,21 +241,6 @@ bool app_init_window(const uint32 w, const uint32 h, const char *name) {
     CORE.Window.current_fbo.height = CORE.Window.screen_size.height;
 
     // ClearBackground(RAYWHITE);
-
-    return true;
-}
-
-bool app_init_renderer(const uint32 w, const uint32 h) {
-    int version = gladLoadGL(glfwGetProcAddress);
-    if (version == 0) {
-        log_fatal("Failed to initialize OpenGL context.\n");
-        return false;
-    }
-    log_info("Loaded OpenGL %d.%d.\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
-
-    glViewport(CORE.Window.render_offset.x / 2, CORE.Window.render_offset.y / 2,
-               CORE.Window.render_size.width - CORE.Window.render_offset.x,
-               CORE.Window.render_size.height - CORE.Window.render_offset.y);
 
     return true;
 }

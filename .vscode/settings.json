@@ -35,6 +35,7 @@
 		"gl.h": "c",
 		"list": "c",
 		"fstream": "c",
-		"xlocale": "c"
+		"xlocale": "c",
+		"camera.h": "c"
 	}
 }
