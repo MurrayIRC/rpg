@@ -155,7 +155,7 @@ void platform_open_window(Platform *platform, const char *title, const uint32 wi
     glfwSetScrollCallback(platform->window.handle, callback_mouse_scroll);
     glfwSetCursorEnterCallback(platform->window.handle, callback_cursor_enter);
 
-    glfwSwapInterval((flags & WINDOW_FLAGS_VSYNC) == WINDOW_FLAGS_VSYNC);
+    glfwSwapInterval((flags & WINDOW_FLAGS_VSYNC) != WINDOW_FLAGS_VSYNC);
 
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
