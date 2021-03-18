@@ -43,6 +43,7 @@ typedef unsigned int uint;
 #endif
 
 #include <stdint.h>
+typedef size_t usize;
 typedef int8_t int8;
 typedef uint8_t uint8;
 typedef int16_t int16;
@@ -51,6 +52,8 @@ typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
+typedef float float32;
+typedef double float64;
 
 /* Defines PI */
 #define PI 3.1415926535897932384626433832795028841971693993751058209749445923
@@ -122,8 +125,6 @@ extern void exit_crash(uint i); /* function guaranteed to crash (Writes to NULL)
 #endif
 
 #include "math.h"
-#include "shader.h"
-#include "camera.h"
 
 typedef struct CoreData {
     struct {
@@ -201,5 +202,13 @@ typedef struct CoreData {
 } CoreData;
 
 static CoreData CORE = {0};
+
+#define kamalloc(__SZ) malloc(__SZ)
+static inline void *_kamalloc_init_impl(size_t sz) {
+    void *data = kamalloc(sz);
+    memset(data, 0, sz);
+    return data;
+}
+#define kamalloc_init(__TYPE) (__TYPE *)_kamalloc_init_impl(sizeof(__TYPE))
 
 #endif

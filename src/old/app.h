@@ -1,5 +1,3 @@
-/* date = February 28th 2021 6:26 pm */
-
 #ifndef APP_H
 #define APP_H
 

@@ -4,9 +4,12 @@
 #include "core.h"
 
 // window callbacks -----------------------------
+static void glfw_error_callback(int error, const char *description) {
+    log_warning("GLFW Error: %i Description: %s\n", error, description);
+}
 
 // GLFW3 WindowSize Callback, runs when window is resizedLastFrame
-static inline void callback_window_size(GLFWwindow *window, int width, int height) {
+static void callback_window_size(GLFWwindow *window, int width, int height) {
     CORE.Window.render_size.width = width;
     CORE.Window.render_size.height = height;
 
@@ -27,33 +30,33 @@ static inline void callback_window_size(GLFWwindow *window, int width, int heigh
 }
 
 // GLFW3 WindowMaximize Callback, runs when window is maximized/restored
-static inline void callback_window_maximize(GLFWwindow *window, int maximized) {
+static void callback_window_maximize(GLFWwindow *window, int maximized) {
 }
 
 // GLFW3 WindowIconify Callback, runs when window is minimized/restored
-static inline void callback_window_iconify(GLFWwindow *window, int iconified) {
+static void callback_window_iconify(GLFWwindow *window, int iconified) {
 }
 
 // GLFW3 WindowFocus Callback, runs when window get/lose focus
-static inline void callback_window_focus(GLFWwindow *window, int focused) {
+static void callback_window_focus(GLFWwindow *window, int focused) {
 }
 // ----------------------------------------------
 
 // mouse callbacks ------------------------------
-static inline void callback_mouse_button(GLFWwindow *window, int button, int action, int mods) {
+static void callback_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     CORE.Input.Mouse.button_state_current[button] = action;
 }
 
-static inline void callback_cursor_pos(GLFWwindow *window, double x_pos, double y_pos) {
+static void callback_cursor_pos(GLFWwindow *window, double x_pos, double y_pos) {
     CORE.Input.Mouse.position.x = (float)x_pos;
     CORE.Input.Mouse.position.y = (float)y_pos;
 }
 
-static inline void callback_mouse_scroll(GLFWwindow *window, double x_offset, double y_offset) {
+static void callback_mouse_scroll(GLFWwindow *window, double x_offset, double y_offset) {
     CORE.Input.Mouse.wheel_move_current = (float)y_offset;
 }
 
-static inline void callback_cursor_enter(GLFWwindow *window, int enter) {
+static void callback_cursor_enter(GLFWwindow *window, int enter) {
     if (enter == true) {
         CORE.Input.Mouse.is_cursor_inside_client = true;
     } else {
@@ -63,7 +66,7 @@ static inline void callback_cursor_enter(GLFWwindow *window, int enter) {
 // ----------------------------------------------
 
 // keyboard callbacks ---------------------------
-static inline void callback_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
+static void callback_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == CORE.Input.Keyboard.exit_key && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(CORE.Window.glfw_window, GLFW_TRUE);
     }
@@ -82,7 +85,7 @@ static inline void callback_key(GLFWwindow *window, int key, int scancode, int a
     }
 }
 
-static inline void callback_char(GLFWwindow *window, unsigned int key) {
+static void callback_char(GLFWwindow *window, unsigned int key) {
     if (CORE.Input.Keyboard.num_chars_pressed < MAX_CHAR_PRESSED_QUEUE) {
         // Add character to the queue
         CORE.Input.Keyboard.char_pressed_queue[CORE.Input.Keyboard.num_chars_pressed] = key;

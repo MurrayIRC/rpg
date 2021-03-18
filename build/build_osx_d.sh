@@ -22,8 +22,6 @@ inc=(
 src=(
 	${proj_root_dir}/src/main.c
 	${proj_root_dir}/src/gl.c
-	${proj_root_dir}/src/kaneda/app.c
-	${proj_root_dir}/src/kaneda/camera.c
 	${proj_root_dir}/src/kaneda/shader.c
 	${proj_root_dir}/src/kaneda/mem_debug.c
 	${proj_root_dir}/src/kaneda/file.c

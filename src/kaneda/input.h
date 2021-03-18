@@ -3,6 +3,42 @@
 
 #include "core.h"
 
+typedef struct {
+    struct {
+        int32 exit_key;               // default exit key
+        char key_state_current[512];  // registers current frame key-state
+        char key_state_previous[512]; // registers previous frame key-state
+
+        int32 key_pressed_queue[MAX_KEYS_PRESSABLE]; // Input keys queue
+        uint32 num_keys_pressed;                     // Input keys queue count
+
+        int32 char_pressed_queue[MAX_CHAR_PRESSED_QUEUE]; // Input characters queue
+        uint32 num_chars_pressed;                         // Input characters queue count
+    } Keyboard;
+    struct {
+        vec2 position;
+        vec2 offset;
+        vec2 scale;
+
+        int32 cursor; // tracks current mouse cursor.
+        bool is_cursor_hidden;
+        bool is_cursor_inside_client;
+
+        char button_state_current[5];
+        char button_state_previous[5];
+        float wheel_move_current;  // registers current mouse wheel variation
+        float wheel_move_previous; // registers previous mouse wheel variation
+    } Mouse;
+    struct {
+        int32 last_button_pressed;   // registers the last gamepad button pressed
+        int32 num_available_axes;    // registers the number of available gamepad axes
+        bool is_ready[MAX_GAMEPADS]; // flag for gamepad readiness
+        float axis_state[MAX_GAMEPADS][MAX_GAMEPAD_AXES]; // gamepad axis states
+        char button_state_current[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
+        char button_state_previous[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
+    } Gamepad;
+} Input;
+
 // Keyboard keys (US keyboard layout)
 // NOTE: Use GetKeyPressed() to allow redefining
 // required keys for alternative layouts
@@ -330,7 +366,7 @@ static inline void input_poll(void) {
 }
 
 // Detect if a key has been pressed once
-static inline void input_is_key_pressed(int key) {
+bool input_is_key_pressed(int key) {
     return (CORE.Input.Keyboard.key_state_previous[key] == 0) &&
            (CORE.Input.Keyboard.key_state_current[key] == 1);
 }
