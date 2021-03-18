@@ -10,21 +10,39 @@ static void validate_file(file f) {
     }
 }
 
-file file_open(const char* path, file_mode mode) {
+file file_open(const char *path, file_mode mode) {
     file f = malloc(sizeof(struct file));
-    *f = (struct file) { .path = path };
+    *f = (struct file){.path = path};
 
-    const char* file_mode_str = "";
+    const char *file_mode_str = "";
     switch (mode) {
-        case FILE_MODE_READ: file_mode_str = "r"; break;
-        case FILE_MODE_READ_BINARY: file_mode_str = "rb"; break;
-        case FILE_MODE_WRITE: file_mode_str = "w"; break;
-        case FILE_MODE_WRITE_BINARY: file_mode_str = "wb"; break;
-        case FILE_MODE_APPEND: file_mode_str = "a"; break;
-        case FILE_MODE_APPEND_BINARY: file_mode_str = "ab"; break;
-        case FILE_MODE_READ_WRITE: file_mode_str = "r+"; break;
-        case FILE_MODE_READ_WRITE_BINARY: file_mode_str = "r+b"; break;
-        default: log_fatal("Trying to open a file with an unknown FileMode %i.\n", mode); exit(1);
+    case FILE_MODE_READ:
+        file_mode_str = "r";
+        break;
+    case FILE_MODE_READ_BINARY:
+        file_mode_str = "rb";
+        break;
+    case FILE_MODE_WRITE:
+        file_mode_str = "w";
+        break;
+    case FILE_MODE_WRITE_BINARY:
+        file_mode_str = "wb";
+        break;
+    case FILE_MODE_APPEND:
+        file_mode_str = "a";
+        break;
+    case FILE_MODE_APPEND_BINARY:
+        file_mode_str = "ab";
+        break;
+    case FILE_MODE_READ_WRITE:
+        file_mode_str = "r+";
+        break;
+    case FILE_MODE_READ_WRITE_BINARY:
+        file_mode_str = "r+b";
+        break;
+    default:
+        log_fatal("Trying to open a file with an unknown FileMode %i.\n", mode);
+        exit(1);
     }
 
     f->fp = fopen(path, file_mode_str);
@@ -33,8 +51,9 @@ file file_open(const char* path, file_mode mode) {
         exit(1);
     }
 
-#ifdef PLATFORM_WIN
-    HANDLE h_file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+#ifdef PLATFORM_WINDOWS
+    HANDLE h_file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h_file == INVALID_HANDLE_VALUE) {
         return -1; // error condition, could call GetLastError to find out more
     }
@@ -54,9 +73,9 @@ file file_open(const char* path, file_mode mode) {
     f->size = (uint32)st.st_size;
 #endif
 
-    //fseek(f->fp, 0, SEEK_END);
-    //f->size = ftell(f->fp);
-    //fseek(f->fp, 0, SEEK_SET);
+    // fseek(f->fp, 0, SEEK_END);
+    // f->size = ftell(f->fp);
+    // fseek(f->fp, 0, SEEK_SET);
 
     return f;
 }
@@ -66,20 +85,23 @@ uint32 file_get_size(file f) {
     return f->size;
 }
 
-const char* file_get_path(file f) {
+const char *file_get_path(file f) {
     validate_file(f);
     return f->path;
 }
 
-void file_read(file f, uint32 offset, uint32 size, void* data) {
+void file_read(file f, uint32 offset, uint32 size, void *data) {
     validate_file(f);
 
     if (offset > f->size) {
-        log_fatal("Trying to read from the file, but offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, f->size);
+        log_fatal("Trying to read from the file, but offset + size (%l + %l) is outside the bounds "
+                  "of the file size %l.\n",
+                  offset, size, f->size);
         exit(1);
     }
     if (data == NULL) {
-        log_fatal("Trying to copy data from the file into the pointer, but the supplied pointer is NULL.\n");
+        log_fatal("Trying to copy data from the file into the pointer, but the supplied pointer is "
+                  "NULL.\n");
         exit(1);
     }
 
@@ -88,14 +110,18 @@ void file_read(file f, uint32 offset, uint32 size, void* data) {
     fseek(f->fp, 0, SEEK_SET);
 }
 
-void file_write(file f, uint32 offset, uint32 size, void* data) {
+void file_write(file f, uint32 offset, uint32 size, void *data) {
     validate_file(f);
     if (offset > f->size) {
-        log_fatal("Trying to write to the file, but offset + size (%l + %l) is outside the bounds of the file size %l.\n", offset, size, f->size);
+        log_fatal("Trying to write to the file, but offset + size (%l + %l) is outside the bounds "
+                  "of the file size %l.\n",
+                  offset, size, f->size);
         exit(1);
     }
     if (data == NULL) {
-        log_fatal("Trying to copy data from the pointer into the file, but the supplied pointer is NULL.\n", f);
+        log_fatal("Trying to copy data from the pointer into the file, but the supplied pointer is "
+                  "NULL.\n",
+                  f);
         exit(1);
     }
 
@@ -104,7 +130,7 @@ void file_write(file f, uint32 offset, uint32 size, void* data) {
     fseek(f->fp, 0, SEEK_SET);
 }
 
-bool file_exists(const char* path) {
+bool file_exists(const char *path) {
     FILE *f = fopen(path, "r");
     if (f == NULL) {
         return false;

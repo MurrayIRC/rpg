@@ -69,7 +69,7 @@ bool app_init_glfw(void) {
         return false;
     }
 
-#ifdef PLATFORM_APPLE
+#ifdef PLATFORM_OSX
     glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
 #endif
 
@@ -229,7 +229,7 @@ bool app_init_window(const uint32 w, const uint32 h, const char *name) {
         CORE.Window.screen_scale_matrix =
             math_scale(math_vec3((float)fb_width / CORE.Window.screen_size.width,
                                  (float)fb_height / CORE.Window.screen_size.height, 1.0f));
-#if !defined(PLATFORM_APPLE)
+#if !defined(PLATFORM_OSX)
         // SetMouseScale((float)CORE.Window.screen.width/fbWidth,
         // (float)CORE.Window.screen.height/fbHeight);
 #endif
@@ -292,7 +292,7 @@ void app_wait(float ms) {
 #ifdef PLATFORM_WINDOWS
     Sleep((unsigned int)ms);
 #endif
-#ifdef PLATFORM_APPLE
+#ifdef PLATFORM_OSX
     usleep(ms * 1000.0f);
 #endif
 #ifdef PLATFORM_LINUX

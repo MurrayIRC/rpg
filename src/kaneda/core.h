@@ -6,12 +6,12 @@
 
 /* Platform Apple */
 #if (defined __APPLE__ || defined _APPLE)
-#define PLATFORM_APPLE
+#define PLATFORM_OSX
 /* Platform Windows */
 #elif (defined _WIN32 || defined _WIN64)
 // Necessary windows defines before including windows.h.
 #define OEMRESOURCE
-#define PLATFORM_WIN
+#define PLATFORM_WINDOWS
 #include <windows.h>
 /* Platform Linux */
 #elif (defined linux || defined _linux || defined __linux__)
@@ -22,10 +22,10 @@
 /* Else - Platform Undefined and Unsupported */
 #endif
 
-#if (defined PLATFORM_APPLE || defined PLATFORM_LINUX)
+#if (defined PLATFORM_OSX || defined PLATFORM_LINUX)
 #include <sched.h>
 #include <unistd.h>
-#elif (defined PLATFORM_WIN)
+#elif (defined PLATFORM_WINDOWS)
 #include <windows.h>
 #endif
 
@@ -34,7 +34,7 @@
 
 #include <stdbool.h>
 
-#ifdef PLATFORM_WIN
+#ifdef PLATFORM_WINDOWS
 typedef unsigned int uint;
 #else
 #include <sys/stat.h>
@@ -203,9 +203,8 @@ typedef struct CoreData {
 
 static CoreData CORE = {0};
 
-#define kamalloc(__SZ) malloc(__SZ)
 static inline void *_kamalloc_init_impl(size_t sz) {
-    void *data = kamalloc(sz);
+    void *data = malloc(sz);
     memset(data, 0, sz);
     return data;
 }

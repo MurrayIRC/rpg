@@ -6,21 +6,17 @@
 #include "log.h"
 
 static struct {
-    void* u_data;
+    void *u_data;
     log_lock_fn lock;
     FILE *fp;
     int level;
     int quiet;
 } log_data;
 
-static const char* level_names[] = {
-    "INFO", "WARNING", "ERROR", "FATAL"
-};
+static const char *level_names[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 
 #ifdef LOG_USE_COLOR
-static const char *level_colors[] = {
-    "\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"
-};
+static const char *level_colors[] = {"\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"};
 #endif
 
 static void lock(void) {
@@ -35,7 +31,7 @@ static void unlock(void) {
     }
 }
 
-void log_set_u_data(void* u_data) {
+void log_set_u_data(void *u_data) {
     log_data.u_data = u_data;
 }
 
@@ -43,7 +39,7 @@ void log_set_lock(log_lock_fn fn) {
     log_data.lock = fn;
 }
 
-void log_set_fp(FILE* fp) {
+void log_set_fp(FILE *fp) {
     log_data.fp = fp;
 }
 
@@ -55,7 +51,7 @@ void log_set_quiet(int enable) {
     log_data.quiet = enable ? 1 : 0;
 }
 
-void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
+void log_dispatch(int level, const char *file, int line, const char *fmt, ...) {
     if (level < log_data.level) {
         return;
     }
@@ -63,24 +59,25 @@ void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
     lock();
 
     time_t t = time(NULL);
-    #ifdef PLATFORM_WIN
+#ifdef PLATFORM_WINDOWS
     struct tm l;
     struct tm *lt = &l;
     localtime_s(lt, &t);
-    #else
+#else
     struct tm *lt = localtime(&t);
-    #endif
+#endif
 
     /* Log to stderr */
     if (!log_data.quiet) {
         va_list args;
         char buf[16];
         buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
-    #ifdef LOG_USE_COLOR
-        fprintf(stderr, "%s \x1b[90m%s:%d:\x1b[0m %s%-5s\x1b[0m", buf, file, line, level_colors[level], level_names[level]);
-    #else
+#ifdef LOG_USE_COLOR
+        fprintf(stderr, "%s \x1b[90m%s:%d:\x1b[0m %s%-5s\x1b[0m", buf, file, line,
+                level_colors[level], level_names[level]);
+#else
         fprintf(stderr, "%s %s:%d %-5s: ", buf, file, line, level_names[level]);
-    #endif
+#endif
         va_start(args, fmt);
         vfprintf(stderr, fmt, args);
         va_end(args);
@@ -103,7 +100,6 @@ void log_dispatch(int level, const char* file, int line, const char* fmt, ...) {
 
     unlock();
 }
-
 
 /*void log_info(const char* msg, ...) {
     va_list args;
