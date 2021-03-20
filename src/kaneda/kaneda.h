@@ -13,7 +13,7 @@
 ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝   ╚═╝   ╚══════╝
 */
 
-typedef struct {
+typedef struct Game {
     void (*init)();
     void (*update)();
     void (*draw)();
@@ -128,7 +128,7 @@ Engine *engine(void);
 Game *engine_game(void);
 Engine *engine_create(Game game);
 void engine_frame(void);
-bool engine_is_running(void);
+bool game_is_running(void);
 void engine_sleep(float ms);
 void engine_destroy(void);
 // -----------------------------------------
@@ -199,6 +199,10 @@ void game_default_function(void) {
     // Empty for a reason...
 }
 
+bool game_is_running(void) {
+    return engine()->game.is_running && !glfwWindowShouldClose(engine()->platform->window.handle);
+}
+
 /*
 ███████╗███╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
 ██╔════╝████╗  ██║██╔════╝ ██║████╗  ██║██╔════╝
@@ -264,19 +268,19 @@ void engine_frame(void) {
     platform->time.previous = platform->time.current;
 
     platform_update(platform);
-    if (!engine_is_running()) {
+    if (!game_is_running()) {
         engine()->shutdown();
         return;
     }
 
     engine()->game.update();
-    if (!engine_is_running()) {
+    if (!game_is_running()) {
         engine()->shutdown();
         return;
     }
 
     engine()->game.draw();
-    if (!engine_is_running()) {
+    if (!game_is_running()) {
         engine()->shutdown();
         return;
     }
@@ -298,10 +302,6 @@ void engine_frame(void) {
         platform->time.frame += wait_time;
         platform->time.delta = platform->time.frame / 1000.0;
     }
-}
-
-bool engine_is_running(void) {
-    return engine()->game.is_running;
 }
 
 void engine_sleep(float ms) {
