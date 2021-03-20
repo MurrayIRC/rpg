@@ -12,23 +12,21 @@ void update(void) {
 void draw(void) {
 }
 
-void close(void) {
-}
-
-Game game_main(int32_t argv, char **argc) {
-    return (Game){.init = init,
-                  .update = update,
-                  .draw = draw,
-                  .shutdown = close,
-                  .flags = WINDOW_FLAGS_VSYNC,
-                  .frame_rate = 60.0f,
-                  .window_width = 800,
-                  .window_height = 600,
-                  .window_title = "rpg"};
+void shutdown(void) {
 }
 
 int32_t main(int32_t argv, char **argc) {
-    Engine *e = engine_create(game_main(argv, argc));
+    Game game = {.init = init,
+                 .update = update,
+                 .draw = draw,
+                 .shutdown = shutdown,
+                 .flags = WINDOW_FLAGS_VSYNC,
+                 .frame_rate = 60.0f,
+                 .window_width = 800,
+                 .window_height = 600,
+                 .window_title = "rpg"};
+
+    Engine *e = engine_create(game);
 
     while (engine_is_running()) {
         engine_frame();
