@@ -10,23 +10,20 @@ static void glfw_error_callback(int error, const char *description) {
 
 // GLFW3 WindowSize Callback, runs when window is resizedLastFrame
 static void callback_window_size(GLFWwindow *window, int width, int height) {
-    CORE.Window.render_size.width = width;
-    CORE.Window.render_size.height = height;
+    Platform *platform = engine()->platform;
 
-    glViewport(CORE.Window.render_offset.x / 2, CORE.Window.render_offset.y / 2,
-               CORE.Window.render_size.width - CORE.Window.render_offset.x,
-               CORE.Window.render_size.height - CORE.Window.render_offset.y);
+    platform->window.render_size.width = width;
+    platform->window.render_size.height = height;
+    glViewport(0, 0, platform->window.render_size.width, platform->window.render_size.height);
 
-    CORE.Window.current_fbo.width = width;
-    CORE.Window.current_fbo.height = height;
-    CORE.Window.was_resized_last_frame = true;
+    // CORE.Window.current_fbo.width = width;
+    // CORE.Window.current_fbo.height = height;
+    // CORE.Window.was_resized_last_frame = true;
 
-    if (CORE.Window.is_fullscreen) {
-        return;
-    }
+    // if (platform.window.is_fullscreen) return;
 
-    CORE.Window.screen_size.width = width;
-    CORE.Window.screen_size.height = height;
+    platform->window.screen_size.width = width;
+    platform->window.screen_size.height = height;
 }
 
 // GLFW3 WindowMaximize Callback, runs when window is maximized/restored
@@ -44,52 +41,43 @@ static void callback_window_focus(GLFWwindow *window, int focused) {
 
 // mouse callbacks ------------------------------
 static void callback_mouse_button(GLFWwindow *window, int button, int action, int mods) {
-    CORE.Input.Mouse.button_state_current[button] = action;
+    input()->mouse.button_state_current[button] = action;
 }
 
 static void callback_cursor_pos(GLFWwindow *window, double x_pos, double y_pos) {
-    CORE.Input.Mouse.position.x = (float)x_pos;
-    CORE.Input.Mouse.position.y = (float)y_pos;
+    input()->mouse.position = math_vec2((float)x_pos, (float)y_pos);
 }
 
 static void callback_mouse_scroll(GLFWwindow *window, double x_offset, double y_offset) {
-    CORE.Input.Mouse.wheel_move_current = (float)y_offset;
+    input()->mouse.wheel_move_current = (float)y_offset;
 }
 
 static void callback_cursor_enter(GLFWwindow *window, int enter) {
-    if (enter == true) {
-        CORE.Input.Mouse.is_cursor_inside_client = true;
-    } else {
-        CORE.Input.Mouse.is_cursor_inside_client = false;
-    }
+    input()->mouse.is_cursor_inside_client = enter ? true : false;
 }
 // ----------------------------------------------
 
 // keyboard callbacks ---------------------------
 static void callback_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    if (key == CORE.Input.Keyboard.exit_key && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(CORE.Window.glfw_window, GLFW_TRUE);
-    }
-
     if (action == GLFW_RELEASE) {
-        CORE.Input.Keyboard.key_state_current[key] = 0;
+        input()->keyboard.key_state_current[key] = 0;
     } else {
-        CORE.Input.Keyboard.key_state_current[key] = 1;
+        input()->keyboard.key_state_current[key] = 1;
     }
 
     // Check if there is space available in the key queue
-    if ((CORE.Input.Keyboard.num_keys_pressed < MAX_KEYS_PRESSABLE) && (action == GLFW_RELEASE)) {
+    if ((input()->keyboard.num_keys_pressed < MAX_KEYS_PRESSABLE) && (action == GLFW_RELEASE)) {
         // Add character to the queue
-        CORE.Input.Keyboard.key_pressed_queue[CORE.Input.Keyboard.num_keys_pressed] = key;
-        CORE.Input.Keyboard.num_keys_pressed++;
+        input()->keyboard.key_pressed_queue[input()->keyboard.num_keys_pressed] = key;
+        input()->keyboard.num_keys_pressed++;
     }
 }
 
 static void callback_char(GLFWwindow *window, unsigned int key) {
-    if (CORE.Input.Keyboard.num_chars_pressed < MAX_CHAR_PRESSED_QUEUE) {
+    if (input()->keyboard.num_chars_pressed < MAX_CHAR_PRESSED_QUEUE) {
         // Add character to the queue
-        CORE.Input.Keyboard.char_pressed_queue[CORE.Input.Keyboard.num_chars_pressed] = key;
-        CORE.Input.Keyboard.num_chars_pressed++;
+        input()->keyboard.char_pressed_queue[input()->keyboard.num_chars_pressed] = key;
+        input()->keyboard.num_chars_pressed++;
     }
 }
 // ----------------------------------------------

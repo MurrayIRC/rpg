@@ -2,7 +2,6 @@
 #define KANEDA_H
 
 #include "core.h"
-#include "callbacks.h"
 
 /*
 ███████╗████████╗██████╗ ██╗   ██╗ ██████╗████████╗███████╗
@@ -22,8 +21,13 @@ typedef struct Game {
     const char *window_title;
     uint32 window_width;
     uint32 window_height;
-    uint32 flags;
     float32 frame_rate;
+
+    struct {
+        bool is_resizable;
+        bool is_fullscreen;
+        bool vsync_on;
+    } flags;
 } Game;
 
 typedef struct Input {
@@ -36,7 +40,7 @@ typedef struct Input {
 
         int32 char_pressed_queue[MAX_CHAR_PRESSED_QUEUE]; // Input characters queue
         uint32 num_chars_pressed;                         // Input characters queue count
-    } Keyboard;
+    } keyboard;
     struct {
         vec2 position;
 
@@ -48,7 +52,7 @@ typedef struct Input {
         char button_state_previous[5];
         float wheel_move_current;  // registers current mouse wheel variation
         float wheel_move_previous; // registers previous mouse wheel variation
-    } Mouse;
+    } mouse;
     struct {
         int32 last_button_pressed;   // registers the last gamepad button pressed
         int32 num_available_axes;    // registers the number of available gamepad axes
@@ -56,7 +60,7 @@ typedef struct Input {
         float axis_state[MAX_GAMEPADS][MAX_GAMEPAD_AXES]; // gamepad axis states
         char button_state_current[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
         char button_state_previous[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
-    } Gamepad;
+    } gamepad;
 } Input;
 
 typedef struct Time {
@@ -105,8 +109,16 @@ Engine *engine(void) {
     return engine_instance;
 }
 
-Game *engine_game(void) {
+Game *game(void) {
     return &engine()->game;
+}
+
+Input *input(void) {
+    return &engine()->platform->input;
+}
+
+Time *time(void) {
+    return &engine()->platform->time;
 }
 // -------------------------------------
 
@@ -125,7 +137,7 @@ void game_default_function(void);
 
 // ENGINE DEFINITIONS ----------------------
 Engine *engine(void);
-Game *engine_game(void);
+Game *game(void);
 Engine *engine_create(Game game);
 void engine_frame(void);
 bool game_is_running(void);
@@ -135,10 +147,17 @@ void engine_destroy(void);
 
 // PLATFORM DEFINITIONS---------------------
 extern Platform *platform_create(void);
-extern void platform_open_window(const char *title, const uint32 width, const uint32 height,
-                                 uint32 flags);
+extern void platform_open_window(const char *title, const uint32 width, const uint32 height);
 extern void platform_update(Platform *platform);
 extern void platform_destroy(Platform *platform);
+extern void platform_window_add_flag(uint32 flag);
+extern void platform_window_remove_flag(uint32 flag);
+extern void platform_window_toggle_flag(uint32 flag);
+extern bool platform_window_has_flag(uint32 flag);
+
+extern bool is_fullscreen(void);
+extern bool is_resizable(void);
+extern bool is_vsync_on(void);
 // -----------------------------------------
 
 // GRAPHICS DEFINITIONS --------------------
@@ -247,7 +266,7 @@ Engine *engine_create(Game game) {
         // Subsystem setup --------------------
         engine()->platform = platform_create();
         engine()->platform->time.fps_limit = game.frame_rate;
-        platform_open_window(game.window_title, game.window_width, game.window_height, game.flags);
+        platform_open_window(game.window_title, game.window_width, game.window_height);
         engine()->graphics = graphics_create();
         engine()->audio = audio_create();
         // ------------------------------------

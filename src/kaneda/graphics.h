@@ -4,6 +4,9 @@
 Graphics *graphics_create() {
     Graphics *gfx = kamalloc_init(Graphics);
 
+    Platform *platform = engine()->platform;
+    glViewport(0, 0, platform->window.render_size.width, platform->window.render_size.height);
+
     return gfx;
 }
 

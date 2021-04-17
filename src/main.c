@@ -17,17 +17,29 @@ void game_shutdown(void) {
 }
 
 int32_t main(int32_t argv, char **argc) {
-    Game game = {.init = game_init,
-                 .update = game_update,
-                 .draw = game_draw,
-                 .shutdown = game_shutdown,
-                 .flags = WINDOW_FLAGS_VSYNC,
-                 .frame_rate = 60.0f,
-                 .window_width = 800,
-                 .window_height = 600,
-                 .window_title = "rpg"};
+    Game rpg = {.init = game_init,
+                .update = game_update,
+                .draw = game_draw,
+                .shutdown = game_shutdown,
+                .flags = {.is_fullscreen = true, .is_resizable = false, .vsync_on = true},
+                .frame_rate = 60.0f,
+                .window_width = 800,
+                .window_height = 600,
+                .window_title = "rpg"};
 
-    Engine *e = engine_create(game);
+    Engine *e = engine_create(rpg);
+
+    if (is_resizable()) {
+        log_info("Resizable!\n");
+    }
+
+    if (is_vsync_on()) {
+        log_info("Vsync On!\n");
+    }
+
+    if (is_fullscreen()) {
+        log_info("Fullscreen!");
+    }
 
     while (game_is_running()) {
         engine_frame();

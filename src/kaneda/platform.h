@@ -4,10 +4,6 @@
 #include "core.h"
 #include "callbacks.h"
 
-#define WINDOW_FLAGS_NO_RESIZE 0x01
-#define WINDOW_FLAGS_FULLSCREEN 0x02
-#define WINDOW_FLAGS_VSYNC 0x03
-
 typedef enum KeyboardKey {
     // Alphanumeric keys
     KEY_APOSTROPHE = 39,
@@ -229,8 +225,7 @@ Platform *platform_create(void) {
     return platform;
 }
 
-void platform_open_window(const char *title, const uint32 width, const uint32 height,
-                          uint32 flags) {
+void platform_open_window(const char *title, const uint32 width, const uint32 height) {
     Platform *platform = engine()->platform;
 
     platform->window.screen_size.width = width;
@@ -241,9 +236,11 @@ void platform_open_window(const char *title, const uint32 width, const uint32 he
     platform->window.display_size.width = vid_mode->width;
     platform->window.display_size.height = vid_mode->height;
 
-    glfwWindowHint(GLFW_RESIZABLE, (flags & WINDOW_FLAGS_NO_RESIZE) != WINDOW_FLAGS_NO_RESIZE);
+    glfwWindowHint(GLFW_RESIZABLE, is_resizable());
 
-    if ((flags & WINDOW_FLAGS_FULLSCREEN) != WINDOW_FLAGS_FULLSCREEN) {
+    // glfwWindowHint(GLFW_RESIZABLE, (flags & WINDOW_FLAGS_RESIZABLE) != WINDOW_FLAGS_RESIZABLE);
+
+    if (is_fullscreen()) {
         platform->window.position.x =
             platform->window.display_size.width / 2 - platform->window.screen_size.width / 2;
         platform->window.position.y =
@@ -337,7 +334,7 @@ void platform_open_window(const char *title, const uint32 width, const uint32 he
     glfwSetScrollCallback(platform->window.handle, callback_mouse_scroll);
     glfwSetCursorEnterCallback(platform->window.handle, callback_cursor_enter);
 
-    glfwSwapInterval((flags & WINDOW_FLAGS_VSYNC) != WINDOW_FLAGS_VSYNC);
+    glfwSwapInterval(is_vsync_on());
 
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
@@ -365,6 +362,18 @@ void platform_destroy(Platform *platform) {
     platform = NULL;
 }
 
+bool is_fullscreen(void) {
+    return engine()->game.flags.is_fullscreen;
+}
+
+bool is_resizable(void) {
+    return engine()->game.flags.is_resizable;
+}
+
+bool is_vsync_on(void) {
+    return engine()->game.flags.vsync_on;
+}
+
 /*
 ██╗███╗   ██╗██████╗ ██╗   ██╗████████╗
 ██║████╗  ██║██╔══██╗██║   ██║╚══██╔══╝
@@ -375,39 +384,39 @@ void platform_destroy(Platform *platform) {
 */
 
 void input_update(Input *input) {
-    engine()->platform->input.Keyboard.num_keys_pressed = 0;
-    engine()->platform->input.Keyboard.num_chars_pressed = 0;
+    engine()->platform->input.keyboard.num_keys_pressed = 0;
+    engine()->platform->input.keyboard.num_chars_pressed = 0;
 
     // Register previous keys states
     for (int i = 0; i < 512; i++) {
-        engine()->platform->input.Keyboard.key_state_previous[i] =
-            engine()->platform->input.Keyboard.key_state_current[i];
+        engine()->platform->input.keyboard.key_state_previous[i] =
+            engine()->platform->input.keyboard.key_state_current[i];
     }
 
     // Register previous mouse states
     for (int i = 0; i < 3; i++) {
-        engine()->platform->input.Mouse.button_state_previous[i] =
-            engine()->platform->input.Mouse.button_state_current[i];
+        engine()->platform->input.mouse.button_state_previous[i] =
+            engine()->platform->input.mouse.button_state_current[i];
     }
 
     // Register previous mouse wheel state
-    engine()->platform->input.Mouse.wheel_move_previous =
-        engine()->platform->input.Mouse.wheel_move_current;
-    engine()->platform->input.Mouse.wheel_move_current = 0.0f;
+    engine()->platform->input.mouse.wheel_move_previous =
+        engine()->platform->input.mouse.wheel_move_current;
+    engine()->platform->input.mouse.wheel_move_current = 0.0f;
 
     for (int i = 0; i < MAX_GAMEPADS; i++) {
-        engine()->platform->input.Gamepad.is_ready[i] = glfwJoystickPresent(i) ? true : false;
+        engine()->platform->input.gamepad.is_ready[i] = glfwJoystickPresent(i) ? true : false;
     }
 }
 
 void input_process(Input *input) {
     // Register gamepads buttons events
     for (int i = 0; i < MAX_GAMEPADS; i++) {
-        if (engine()->platform->input.Gamepad.is_ready[i]) {
+        if (engine()->platform->input.gamepad.is_ready[i]) {
             // Register previous gamepad states
             for (int k = 0; k < MAX_GAMEPAD_BUTTONS; k++)
-                engine()->platform->input.Gamepad.button_state_previous[i][k] =
-                    engine()->platform->input.Gamepad.button_state_current[i][k];
+                engine()->platform->input.gamepad.button_state_previous[i][k] =
+                    engine()->platform->input.gamepad.button_state_current[i][k];
 
             // Get current gamepad state
             // NOTE: There is no callback available, so we get it manually
@@ -480,10 +489,10 @@ void input_process(Input *input) {
                 if (button != -1) // Check for valid button
                 {
                     if (buttons[k] == GLFW_PRESS) {
-                        engine()->platform->input.Gamepad.button_state_current[i][button] = 1;
-                        engine()->platform->input.Gamepad.last_button_pressed = button;
+                        engine()->platform->input.gamepad.button_state_current[i][button] = 1;
+                        engine()->platform->input.gamepad.last_button_pressed = button;
                     } else
-                        engine()->platform->input.Gamepad.button_state_current[i][button] = 0;
+                        engine()->platform->input.gamepad.button_state_current[i][button] = 0;
                 }
             }
 
@@ -493,21 +502,21 @@ void input_process(Input *input) {
             for (int k = 0;
                  (axes != NULL) && (k < GLFW_GAMEPAD_AXIS_LAST + 1) && (k < MAX_GAMEPAD_AXES);
                  k++) {
-                engine()->platform->input.Gamepad.axis_state[i][k] = axes[k];
+                engine()->platform->input.gamepad.axis_state[i][k] = axes[k];
             }
 
             // Register buttons for 2nd triggers (because GLFW doesn't count these as buttons
             // but rather axis)
             engine()
-                ->platform->input.Gamepad.button_state_current[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] =
-                (char)(engine()->platform->input.Gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_TRIGGER] >
+                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] =
+                (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_TRIGGER] >
                        0.1);
             engine()
-                ->platform->input.Gamepad.button_state_current[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] =
-                (char)(engine()->platform->input.Gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_TRIGGER] >
+                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] =
+                (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_TRIGGER] >
                        0.1);
 
-            engine()->platform->input.Gamepad.num_available_axes = GLFW_GAMEPAD_AXIS_LAST;
+            engine()->platform->input.gamepad.num_available_axes = GLFW_GAMEPAD_AXIS_LAST;
         }
     }
 
@@ -518,45 +527,45 @@ void input_process(Input *input) {
 
 // Detect if a key has been pressed once
 bool input_is_key_pressed(int key) {
-    return (engine()->platform->input.Keyboard.key_state_previous[key] == 0) &&
-           (engine()->platform->input.Keyboard.key_state_current[key] == 1);
+    return (engine()->platform->input.keyboard.key_state_previous[key] == 0) &&
+           (engine()->platform->input.keyboard.key_state_current[key] == 1);
 }
 
 // Detect if a key is being pressed (key held down)
 bool input_is_key_down(int key) {
-    return engine()->platform->input.Keyboard.key_state_current[key] == 1;
+    return engine()->platform->input.keyboard.key_state_current[key] == 1;
 }
 
 // Detect if a key has been released once
 bool input_is_key_released(int key) {
-    return (engine()->platform->input.Keyboard.key_state_previous[key] == 1) &&
-           (engine()->platform->input.Keyboard.key_state_current[key] == 0);
+    return (engine()->platform->input.keyboard.key_state_previous[key] == 1) &&
+           (engine()->platform->input.keyboard.key_state_current[key] == 0);
 }
 
 // Detect if a key is NOT being pressed (key not held down)
 bool input_is_key_up(int key) {
-    return engine()->platform->input.Keyboard.key_state_current[key] == 0;
+    return engine()->platform->input.keyboard.key_state_current[key] == 0;
 }
 
 // Get the last key pressed
 int input_get_last_key_pressed(void) {
     int value = 0;
 
-    if (engine()->platform->input.Keyboard.num_keys_pressed > 0) {
+    if (engine()->platform->input.keyboard.num_keys_pressed > 0) {
         // Get character from the queue head
-        value = engine()->platform->input.Keyboard.key_pressed_queue[0];
+        value = engine()->platform->input.keyboard.key_pressed_queue[0];
 
         // Shift elements 1 step toward the head.
-        for (int i = 0; i < (engine()->platform->input.Keyboard.num_keys_pressed - 1); i++) {
-            engine()->platform->input.Keyboard.key_pressed_queue[i] =
-                engine()->platform->input.Keyboard.key_pressed_queue[i + 1];
+        for (int i = 0; i < (engine()->platform->input.keyboard.num_keys_pressed - 1); i++) {
+            engine()->platform->input.keyboard.key_pressed_queue[i] =
+                engine()->platform->input.keyboard.key_pressed_queue[i + 1];
         }
 
         // Reset last character in the queue
         engine()
-            ->platform->input.Keyboard
-            .key_pressed_queue[engine()->platform->input.Keyboard.num_keys_pressed] = 0;
-        engine()->platform->input.Keyboard.num_keys_pressed--;
+            ->platform->input.keyboard
+            .key_pressed_queue[engine()->platform->input.keyboard.num_keys_pressed] = 0;
+        engine()->platform->input.keyboard.num_keys_pressed--;
     }
 
     return value;
@@ -566,21 +575,21 @@ int input_get_last_key_pressed(void) {
 int input_get_last_char_pressed(void) {
     int value = 0;
 
-    if (engine()->platform->input.Keyboard.num_chars_pressed > 0) {
+    if (engine()->platform->input.keyboard.num_chars_pressed > 0) {
         // Get character from the queue head
-        value = engine()->platform->input.Keyboard.char_pressed_queue[0];
+        value = engine()->platform->input.keyboard.char_pressed_queue[0];
 
         // Shift elements 1 step toward the head.
-        for (int i = 0; i < (engine()->platform->input.Keyboard.num_chars_pressed - 1); i++) {
-            engine()->platform->input.Keyboard.char_pressed_queue[i] =
-                engine()->platform->input.Keyboard.char_pressed_queue[i + 1];
+        for (int i = 0; i < (engine()->platform->input.keyboard.num_chars_pressed - 1); i++) {
+            engine()->platform->input.keyboard.char_pressed_queue[i] =
+                engine()->platform->input.keyboard.char_pressed_queue[i + 1];
         }
 
         // Reset last character in the queue
         engine()
-            ->platform->input.Keyboard
-            .char_pressed_queue[engine()->platform->input.Keyboard.num_chars_pressed] = 0;
-        engine()->platform->input.Keyboard.num_chars_pressed--;
+            ->platform->input.keyboard
+            .char_pressed_queue[engine()->platform->input.keyboard.num_chars_pressed] = 0;
+        engine()->platform->input.keyboard.num_chars_pressed--;
     }
 
     return value;
@@ -588,10 +597,10 @@ int input_get_last_char_pressed(void) {
 
 // Return axis movement vector for a gamepad
 float input_gamepad_get_axis_movement(int gamepad, int axis) {
-    if ((gamepad < MAX_GAMEPADS) && engine()->platform->input.Gamepad.is_ready[gamepad] &&
+    if ((gamepad < MAX_GAMEPADS) && engine()->platform->input.gamepad.is_ready[gamepad] &&
         (axis < MAX_GAMEPAD_AXES) &&
-        (fabsf(engine()->platform->input.Gamepad.axis_state[gamepad][axis]) > 0.1f)) {
-        return engine()->platform->input.Gamepad.axis_state[gamepad][axis];
+        (fabsf(engine()->platform->input.gamepad.axis_state[gamepad][axis]) > 0.1f)) {
+        return engine()->platform->input.gamepad.axis_state[gamepad][axis];
     }
 
     return 0.0f;
@@ -599,37 +608,37 @@ float input_gamepad_get_axis_movement(int gamepad, int axis) {
 
 // Detect if a gamepad button has been pressed once
 bool input_gamepad_is_button_pressed(int gamepad, int button) {
-    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.Gamepad.is_ready[gamepad] &&
+    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.gamepad.is_ready[gamepad] &&
            (button < MAX_GAMEPAD_BUTTONS) &&
-           (engine()->platform->input.Gamepad.button_state_previous[gamepad][button] == 0) &&
-           (engine()->platform->input.Gamepad.button_state_current[gamepad][button] == 1);
+           (engine()->platform->input.gamepad.button_state_previous[gamepad][button] == 0) &&
+           (engine()->platform->input.gamepad.button_state_current[gamepad][button] == 1);
 }
 
 // Detect if a gamepad button is being pressed
 bool input_gamepad_is_button_down(int gamepad, int button) {
-    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.Gamepad.is_ready[gamepad] &&
+    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.gamepad.is_ready[gamepad] &&
            (button < MAX_GAMEPAD_BUTTONS) &&
-           (engine()->platform->input.Gamepad.button_state_current[gamepad][button] == 1);
+           (engine()->platform->input.gamepad.button_state_current[gamepad][button] == 1);
 }
 
 // Detect if a gamepad button has NOT been pressed once
 bool input_gamepad_is_button_released(int gamepad, int button) {
-    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.Gamepad.is_ready[gamepad] &&
+    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.gamepad.is_ready[gamepad] &&
            (button < MAX_GAMEPAD_BUTTONS) &&
-           (engine()->platform->input.Gamepad.button_state_previous[gamepad][button] == 1) &&
-           (engine()->platform->input.Gamepad.button_state_current[gamepad][button] == 0);
+           (engine()->platform->input.gamepad.button_state_previous[gamepad][button] == 1) &&
+           (engine()->platform->input.gamepad.button_state_current[gamepad][button] == 0);
 }
 
 // Detect if a mouse button is NOT being pressed
 bool input_gamepad_is_button_up(int gamepad, int button) {
-    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.Gamepad.is_ready[gamepad] &&
+    return (gamepad < MAX_GAMEPADS) && engine()->platform->input.gamepad.is_ready[gamepad] &&
            (button < MAX_GAMEPAD_BUTTONS) &&
-           (engine()->platform->input.Gamepad.button_state_current[gamepad][button] == 0);
+           (engine()->platform->input.gamepad.button_state_current[gamepad][button] == 0);
 }
 
 // Get the last gamepad button pressed
 int input_gamepad_get_last_button_pressed(void) {
-    return engine()->platform->input.Gamepad.last_button_pressed;
+    return engine()->platform->input.gamepad.last_button_pressed;
 }
 
 // Set internal gamepad mappings
@@ -639,19 +648,19 @@ int input_gamepad_set_mappings(const char *mappings) {
 
 // Detect if a mouse button has been pressed once
 bool input_mouse_is_button_pressed(int button) {
-    return (engine()->platform->input.Mouse.button_state_current[button] == 1) &&
-           (engine()->platform->input.Mouse.button_state_previous[button] == 0);
+    return (engine()->platform->input.mouse.button_state_current[button] == 1) &&
+           (engine()->platform->input.mouse.button_state_previous[button] == 0);
 }
 
 // Detect if a mouse button is being pressed
 bool input_mouse_is_button_down(int button) {
-    return engine()->platform->input.Mouse.button_state_current[button] == 1;
+    return engine()->platform->input.mouse.button_state_current[button] == 1;
 }
 
 // Detect if a mouse button has been released once
 bool input_mouse_is_button_released(int button) {
-    return (engine()->platform->input.Mouse.button_state_current[button] == 0) &&
-           (engine()->platform->input.Mouse.button_state_previous[button] == 1);
+    return (engine()->platform->input.mouse.button_state_current[button] == 0) &&
+           (engine()->platform->input.mouse.button_state_previous[button] == 1);
 }
 
 // Detect if a mouse button is NOT being pressed
@@ -661,41 +670,41 @@ bool input_mouse_is_button_up(int button) {
 
 // Returns mouse position X
 int input_mouse_get_x(void) {
-    return (int)(engine()->platform->input.Mouse.position.x);
+    return (int)(engine()->platform->input.mouse.position.x);
 }
 
 // Returns mouse position Y
 int input_mouse_get_y(void) {
-    return (int)(engine()->platform->input.Mouse.position.y);
+    return (int)(engine()->platform->input.mouse.position.y);
 }
 
 // Returns mouse position XY
 vec2 input_mouse_get_position(void) {
-    return math_vec2(engine()->platform->input.Mouse.position.x,
-                     engine()->platform->input.Mouse.position.y);
+    return math_vec2(engine()->platform->input.mouse.position.x,
+                     engine()->platform->input.mouse.position.y);
 }
 
 // Set mouse position XY
 void input_mouse_set_position(int x, int y) {
-    engine()->platform->input.Mouse.position = math_vec2((float)x, (float)y);
-    glfwSetCursorPos(CORE.Window.glfw_window, engine()->platform->input.Mouse.position.x,
-                     engine()->platform->input.Mouse.position.y);
+    engine()->platform->input.mouse.position = math_vec2((float)x, (float)y);
+    glfwSetCursorPos(CORE.Window.glfw_window, engine()->platform->input.mouse.position.x,
+                     engine()->platform->input.mouse.position.y);
 }
 
 // Returns mouse wheel movement Y
 float input_mouse_get_wheel_move(void) {
-    return engine()->platform->input.Mouse.wheel_move_previous;
+    return engine()->platform->input.mouse.wheel_move_previous;
 }
 
 // Returns mouse cursor
 int input_mouse_get_cursor(void) {
-    return engine()->platform->input.Mouse.cursor;
+    return engine()->platform->input.mouse.cursor;
 }
 
 // Set mouse cursor
 // NOTE: This is a no-op on platforms other than PLATFORM_DESKTOP
 void input_mouse_set_cursor(int cursor) {
-    engine()->platform->input.Mouse.cursor = cursor;
+    engine()->platform->input.mouse.cursor = cursor;
     if (cursor == MOUSE_CURSOR_DEFAULT)
         glfwSetCursor(CORE.Window.glfw_window, NULL);
     else {
