@@ -36,7 +36,8 @@ set libs=^
 	-lgdi32^
 	-lAdvapi32^
 	-L%glfw_lib%^
-	-lglfw3
+	-lglfw3^
+	-lXinput
 
 :: Build
 gcc -O0 %inc% %src% %flags% %libs% -lm -o %proj_name%

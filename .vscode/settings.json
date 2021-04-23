@@ -36,6 +36,8 @@
 		"list": "c",
 		"fstream": "c",
 		"xlocale": "c",
-		"camera.h": "c"
+		"camera.h": "c",
+		"cstdlib": "cpp",
+		"xinput.h": "c"
 	}
 }

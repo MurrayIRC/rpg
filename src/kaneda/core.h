@@ -12,7 +12,6 @@
 // Necessary windows defines before including windows.h.
 #define OEMRESOURCE
 #define PLATFORM_WINDOWS
-#include <windows.h>
 /* Platform Linux */
 #elif (defined linux || defined _linux || defined __linux__)
 #define PLATFORM_LINUX
@@ -26,7 +25,8 @@
 #include <sched.h>
 #include <unistd.h>
 #elif (defined PLATFORM_WINDOWS)
-#include <windows.h>
+#include <Windows.h>
+#include <Xinput.h>
 #endif
 
 #include <glad/gl.h>

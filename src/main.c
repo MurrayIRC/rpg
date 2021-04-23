@@ -7,6 +7,7 @@ void game_init() {
 }
 
 void game_update(void) {
+    // log_info("delta time: {%f}\n", time_delta());
 }
 
 void game_draw(void) {
@@ -21,25 +22,13 @@ int32_t main(int32_t argv, char **argc) {
                 .update = game_update,
                 .draw = game_draw,
                 .shutdown = game_shutdown,
-                .flags = {.is_fullscreen = true, .is_resizable = false, .vsync_on = true},
+                .flags = {.is_fullscreen = false, .is_resizable = true, .vsync_on = true},
                 .frame_rate = 60.0f,
                 .window_width = 800,
                 .window_height = 600,
                 .window_title = "rpg"};
 
     Engine *e = engine_create(rpg);
-
-    if (is_resizable()) {
-        log_info("Resizable!\n");
-    }
-
-    if (is_vsync_on()) {
-        log_info("Vsync On!\n");
-    }
-
-    if (is_fullscreen()) {
-        log_info("Fullscreen!");
-    }
 
     while (game_is_running()) {
         engine_frame();

@@ -8,6 +8,48 @@ static void glfw_error_callback(int error, const char *description) {
     log_warning("GLFW Error: %i Description: %s\n", error, description);
 }
 
+static LRESULT CALLBACK win32_message(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
+    if (umsg == WM_KEYDOWN) {
+        input()->keyboard.key_state_current[(unsigned int)wparam] = 1;
+    } else if (umsg == WM_KEYUP) {
+        input()->keyboard.key_state_current[(unsigned int)wparam] = 0;
+    } else {
+        return DefWindowProc(hwnd, umsg, wparam, lparam);
+    }
+
+    // Check if there is space available in the key queue
+    if ((input()->keyboard.num_keys_pressed < MAX_KEYS_PRESSABLE) && (umsg == WM_KEYUP)) {
+        // Add character to the queue
+        input()->keyboard.key_pressed_queue[input()->keyboard.num_keys_pressed] =
+            (unsigned int)wparam;
+        input()->keyboard.num_keys_pressed++;
+    }
+
+    return 0;
+}
+
+static LRESULT CALLBACK win32_wndproc_callback(HWND hwnd, UINT umessage, WPARAM wparam,
+                                               LPARAM lparam) {
+    switch (umessage) {
+    // Check if the window is being destroyed.
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    // Check if the window is being closed.
+    case WM_CLOSE: {
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    // All other messages pass to the message handler in the system class.
+    default: {
+        return win32_message(hwnd, umessage, wparam, lparam);
+    }
+    }
+}
+
 // GLFW3 WindowSize Callback, runs when window is resizedLastFrame
 static void callback_window_size(GLFWwindow *window, int width, int height) {
     Platform *platform = engine()->platform;

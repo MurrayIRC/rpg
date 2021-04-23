@@ -148,35 +148,23 @@ typedef enum GamepadButton {
     // This is here just for error checking
     GAMEPAD_BUTTON_UNKNOWN = 0,
 
-    // This is normally a DPAD
-    GAMEPAD_BUTTON_LEFT_FACE_UP,
-    GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
-    GAMEPAD_BUTTON_LEFT_FACE_DOWN,
-    GAMEPAD_BUTTON_LEFT_FACE_LEFT,
-
-    // This normally corresponds with PlayStation and Xbox controllers
-    // XBOX: [Y,X,A,B]
-    // PS3: [Triangle,Square,Cross,Circle]
-    // No support for 6 button controllers though..
-    GAMEPAD_BUTTON_RIGHT_FACE_UP,
-    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
-    GAMEPAD_BUTTON_RIGHT_FACE_DOWN,
-    GAMEPAD_BUTTON_RIGHT_FACE_LEFT,
-
-    // Triggers
-    GAMEPAD_BUTTON_LEFT_TRIGGER_1,
-    GAMEPAD_BUTTON_LEFT_TRIGGER_2,
-    GAMEPAD_BUTTON_RIGHT_TRIGGER_1,
-    GAMEPAD_BUTTON_RIGHT_TRIGGER_2,
-
-    // These are buttons in the center of the gamepad
-    GAMEPAD_BUTTON_MIDDLE_LEFT,  // PS3 Select
-    GAMEPAD_BUTTON_MIDDLE,       // PS Button/XBOX Button
-    GAMEPAD_BUTTON_MIDDLE_RIGHT, // PS3 Start
-
-    // These are the joystick press in buttons
+    GAMEPAD_BUTTON_DPAD_UP,
+    GAMEPAD_BUTTON_DPAD_DOWN,
+    GAMEPAD_BUTTON_DPAD_LEFT,
+    GAMEPAD_BUTTON_DPAD_RIGHT,
+    GAMEPAD_BUTTON_Y_OR_TRIANGLE,
+    GAMEPAD_BUTTON_A_OR_CROSS,
+    GAMEPAD_BUTTON_X_OR_SQUARE,
+    GAMEPAD_BUTTON_B_OR_CIRCLE,
+    GAMEPAD_BUTTON_LEFT_BUMPER,
+    GAMEPAD_BUTTON_LEFT_TRIGGER,
+    GAMEPAD_BUTTON_RIGHT_BUMPER,
+    GAMEPAD_BUTTON_RIGHT_TRIGGER,
     GAMEPAD_BUTTON_LEFT_THUMB,
-    GAMEPAD_BUTTON_RIGHT_THUMB
+    GAMEPAD_BUTTON_RIGHT_THUMB,
+    GAMEPAD_BUTTON_SELECT,     // PS3 Select
+    GAMEPAD_BUTTON_PS_OR_XBOX, // PS Button/XBOX Button
+    GAMEPAD_BUTTON_START       // PS3 Start
 } GamepadButton;
 
 typedef enum GamepadAxis {
@@ -207,6 +195,9 @@ Platform *platform_create(void) {
 
     assert(platform);
 
+#ifdef PLATFORM_WINDOWS
+
+#else
     glfwInit();
 
 #ifdef PLATFORM_OSX
@@ -221,6 +212,7 @@ Platform *platform_create(void) {
     glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 
     glfwSetErrorCallback(glfw_error_callback);
+#endif
 
     return platform;
 }
@@ -231,6 +223,63 @@ void platform_open_window(const char *title, const uint32 width, const uint32 he
     platform->window.screen_size.width = width;
     platform->window.screen_size.height = height;
 
+#ifdef PLATFORM_WINDOWS
+    platform->win32.hinstance = GetModuleHandle(NULL);
+    platform->win32.app_name = title;
+    ZeroMemory(&platform->win32.msg, sizeof(MSG));
+
+    WNDCLASSEX wc;
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    wc.lpfnWndProc = win32_wndproc_callback;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = platform->win32.hinstance;
+    wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+    wc.hIconSm = wc.hIcon;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = platform->win32.app_name;
+    wc.cbSize = sizeof(WNDCLASSEX);
+
+    RegisterClassEx(&wc);
+    platform->window.display_size.width = GetSystemMetrics(SM_CXSCREEN);
+    platform->window.display_size.height = GetSystemMetrics(SM_CYSCREEN);
+
+    DEVMODE dm_screen_settings;
+    if (is_fullscreen()) {
+        memset(&dm_screen_settings, 0, sizeof(dm_screen_settings));
+        dm_screen_settings.dmSize = sizeof(dm_screen_settings);
+        dm_screen_settings.dmPelsWidth = (unsigned long)platform->window.display_size.width;
+        dm_screen_settings.dmPelsHeight = (unsigned long)platform->window.display_size.height;
+        dm_screen_settings.dmBitsPerPel = 32;
+        dm_screen_settings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+
+        ChangeDisplaySettings(&dm_screen_settings, CDS_FULLSCREEN);
+        platform->window.position.x = platform->window.position.y = 0;
+
+        platform->win32.hwnd = CreateWindowEx(
+            WS_EX_APPWINDOW, title, title, WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+            platform->window.position.x, platform->window.position.y,
+            platform->window.display_size.width, platform->window.display_size.height, NULL, NULL,
+            platform->win32.hinstance, NULL);
+    } else {
+        platform->window.position.x = (GetSystemMetrics(SM_CXSCREEN) - width) / 2;
+        platform->window.position.y = (GetSystemMetrics(SM_CYSCREEN) - height) / 2;
+
+        platform->win32.hwnd = CreateWindowEx(
+            WS_EX_APPWINDOW, title, title, WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+            platform->window.position.x, platform->window.position.y,
+            platform->window.screen_size.width, platform->window.screen_size.height, NULL, NULL,
+            platform->win32.hinstance, NULL);
+    }
+
+    ShowWindow(platform->win32.hwnd, SW_SHOW);
+    SetForegroundWindow(platform->win32.hwnd);
+    SetFocus(platform->win32.hwnd);
+    ShowCursor(true);
+
+#else
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *vid_mode = glfwGetVideoMode(monitor);
     platform->window.display_size.width = vid_mode->width;
@@ -342,6 +391,7 @@ void platform_open_window(const char *title, const uint32 width, const uint32 he
         return;
     }
     log_info("Loaded OpenGL %d.%d.\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+#endif
 }
 
 void platform_update(Platform *platform) {
@@ -355,8 +405,20 @@ void platform_destroy(Platform *platform) {
         return;
     }
 
+#ifdef PLATFORM_WINDOWS
+    ShowCursor(true);
+    if (is_fullscreen()) {
+        ChangeDisplaySettings(NULL, 0);
+    }
+
+    DestroyWindow(platform->win32.hwnd);
+    platform->win32.hwnd = NULL;
+    UnregisterClass(platform->win32.app_name, platform->win32.hinstance);
+    platform->win32.hinstance = NULL;
+#else
     glfwDestroyWindow(platform->window.handle);
     glfwTerminate();
+#endif
 
     free(platform);
     platform = NULL;
@@ -405,7 +467,16 @@ void input_update(Input *input) {
     engine()->platform->input.mouse.wheel_move_current = 0.0f;
 
     for (int i = 0; i < MAX_GAMEPADS; i++) {
+#ifdef PLATFORM_WINDOWS
+        XINPUT_STATE state;
+        ZeroMemory(&state, sizeof(XINPUT_STATE));
+        engine()->platform->input.gamepad.is_ready[i] =
+            XInputGetState((DWORD)i, &state) == ERROR_SUCCESS ? true : false;
+
+        engine()->platform->input.gamepad.xinput_state[i] = state;
+#else
         engine()->platform->input.gamepad.is_ready[i] = glfwJoystickPresent(i) ? true : false;
+#endif
     }
 }
 
@@ -418,62 +489,157 @@ void input_process(Input *input) {
                 engine()->platform->input.gamepad.button_state_previous[i][k] =
                     engine()->platform->input.gamepad.button_state_current[i][k];
 
-            // Get current gamepad state
-            // NOTE: There is no callback available, so we get it manually
-            // Get remapped buttons
-            GLFWgamepadstate state = {0};
-            glfwGetGamepadState(i, &state); // This remapps all gamepads so they have their
-                                            // buttons mapped like an xbox controller
+                // Get current gamepad state
+                // NOTE: There is no callback available, so we get it manually
+                // Get remapped buttons
+#ifdef PLATFORM_WINDOWS
+            XINPUT_GAMEPAD gamepad = engine()->platform->input.gamepad.xinput_state[i].Gamepad;
+            const WORD buttons = gamepad.wButtons;
 
+            GamepadButton button = -1;
+
+            if (buttons & XINPUT_GAMEPAD_DPAD_UP) {
+                button = GAMEPAD_BUTTON_DPAD_UP;
+            } else if (buttons & XINPUT_GAMEPAD_DPAD_DOWN) {
+                button = GAMEPAD_BUTTON_DPAD_DOWN;
+            } else if (buttons & XINPUT_GAMEPAD_DPAD_LEFT) {
+                button = GAMEPAD_BUTTON_DPAD_LEFT;
+            } else if (buttons & XINPUT_GAMEPAD_DPAD_RIGHT) {
+                button = GAMEPAD_BUTTON_DPAD_RIGHT;
+            } else if (buttons & XINPUT_GAMEPAD_START) {
+                button = GAMEPAD_BUTTON_START;
+            } else if (buttons & XINPUT_GAMEPAD_BACK) {
+                button = GAMEPAD_BUTTON_SELECT;
+            } else if (buttons & XINPUT_GAMEPAD_LEFT_THUMB) {
+                button = GAMEPAD_BUTTON_LEFT_THUMB;
+            } else if (buttons & XINPUT_GAMEPAD_RIGHT_THUMB) {
+                button = GAMEPAD_BUTTON_RIGHT_THUMB;
+            } else if (buttons & XINPUT_GAMEPAD_LEFT_SHOULDER) {
+                button = GAMEPAD_BUTTON_LEFT_BUMPER;
+            } else if (buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER) {
+                button = GAMEPAD_BUTTON_RIGHT_BUMPER;
+            } else if (buttons & XINPUT_GAMEPAD_A) {
+                button = GAMEPAD_BUTTON_A_OR_CROSS;
+            } else if (buttons & XINPUT_GAMEPAD_B) {
+                button = GAMEPAD_BUTTON_B_OR_CIRCLE;
+            } else if (buttons & XINPUT_GAMEPAD_X) {
+                button = GAMEPAD_BUTTON_X_OR_SQUARE;
+            } else if (buttons & XINPUT_GAMEPAD_Y) {
+                button = GAMEPAD_BUTTON_Y_OR_TRIANGLE;
+            }
+
+            if (button != -1) {
+                engine()->platform->input.gamepad.button_state_current[i][button] = 1;
+                engine()->platform->input.gamepad.last_button_pressed = button;
+
+                // TODO: Figure out how to get button state current to set to 0 if not pressed.
+            }
+
+            // TODO: no magic numbers!!!
+            float deadzone_x = 0.05f;
+            float deadzone_y = 0.05f;
+
+            float norm_lx = fmaxf(-1, (float)gamepad.sThumbLX / 32767);
+            float norm_ly = fmaxf(-1, (float)gamepad.sThumbLY / 32767);
+            float norm_rx = fmaxf(-1, (float)gamepad.sThumbRX / 32767);
+            float norm_ry = fmaxf(-1, (float)gamepad.sThumbRY / 32767);
+            float lx = (abs(norm_lx) < deadzone_x
+                            ? 0
+                            : (abs(norm_lx) - deadzone_x) * (norm_lx / abs(norm_lx)));
+
+            float ly = (abs(norm_ly) < deadzone_y
+                            ? 0
+                            : (abs(norm_ly) - deadzone_y) * (norm_ly / abs(norm_ly)));
+            float rx = (abs(norm_rx) < deadzone_x
+                            ? 0
+                            : (abs(norm_rx) - deadzone_x) * (norm_rx / abs(norm_rx)));
+            float ry = (abs(norm_ry) < deadzone_y
+                            ? 0
+                            : (abs(norm_ry) - deadzone_y) * (norm_ry / abs(norm_ry)));
+
+            if (deadzone_x > 0) {
+                lx *= 1 / (1 - deadzone_x);
+                rx *= 1 / (1 - deadzone_x);
+            }
+            if (deadzone_y > 0) {
+                ly *= 1 / (1 - deadzone_y);
+                ry *= 1 / (1 - deadzone_y);
+            }
+
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_X] = lx;
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_Y] = ly;
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_X] = rx;
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_Y] = ry;
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_TRIGGER] =
+                gamepad.bLeftTrigger / 255;
+            engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_TRIGGER] =
+                gamepad.bRightTrigger / 255;
+
+            // Register buttons for 2nd triggers (because GLFW doesn't count these as buttons
+            // but rather axis)
+            // TODO: NO MAGIC NUMBERS IDIOT
+            engine()->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_LEFT_TRIGGER] =
+                (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_TRIGGER] >
+                       0.1);
+            engine()
+                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_RIGHT_TRIGGER] =
+                (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_TRIGGER] >
+                       0.1);
+
+            engine()->platform->input.gamepad.num_available_axes = GLFW_GAMEPAD_AXIS_LAST;
+#else
+            GLFWgamepadstate state = {0};
+            glfwGetGamepadState(i, &state); // This remaps all gamepads so they have their buttons
+                                            // mapped like an xbox controller
             const unsigned char *buttons = state.buttons;
 
-            for (int k = 0; (buttons != NULL) && (k < GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1) &&
+            for (int k = 0; (buttons != NULL) && (k < GLFW_GAMEPAD_BUTTON_LAST + 1) &&
                             (k < MAX_GAMEPAD_BUTTONS);
                  k++) {
                 GamepadButton button = -1;
 
                 switch (k) {
                 case GLFW_GAMEPAD_BUTTON_Y:
-                    button = GAMEPAD_BUTTON_RIGHT_FACE_UP;
+                    button = GAMEPAD_BUTTON_Y_OR_TRIANGLE;
                     break;
                 case GLFW_GAMEPAD_BUTTON_B:
-                    button = GAMEPAD_BUTTON_RIGHT_FACE_RIGHT;
+                    button = GAMEPAD_BUTTON_B_OR_CIRCLE;
                     break;
                 case GLFW_GAMEPAD_BUTTON_A:
-                    button = GAMEPAD_BUTTON_RIGHT_FACE_DOWN;
+                    button = GAMEPAD_BUTTON_A_OR_CROSS;
                     break;
                 case GLFW_GAMEPAD_BUTTON_X:
-                    button = GAMEPAD_BUTTON_RIGHT_FACE_LEFT;
+                    button = GAMEPAD_BUTTON_X_OR_SQUARE;
                     break;
 
                 case GLFW_GAMEPAD_BUTTON_LEFT_BUMPER:
-                    button = GAMEPAD_BUTTON_LEFT_TRIGGER_1;
+                    button = GAMEPAD_BUTTON_LEFT_BUMPER;
                     break;
                 case GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER:
-                    button = GAMEPAD_BUTTON_RIGHT_TRIGGER_1;
+                    button = GAMEPAD_BUTTON_RIGHT_BUMPER;
                     break;
 
                 case GLFW_GAMEPAD_BUTTON_BACK:
-                    button = GAMEPAD_BUTTON_MIDDLE_LEFT;
+                    button = GAMEPAD_BUTTON_SELECT;
                     break;
                 case GLFW_GAMEPAD_BUTTON_GUIDE:
-                    button = GAMEPAD_BUTTON_MIDDLE;
+                    button = GAMEPAD_BUTTON_PS_OR_XBOX;
                     break;
                 case GLFW_GAMEPAD_BUTTON_START:
-                    button = GAMEPAD_BUTTON_MIDDLE_RIGHT;
+                    button = GAMEPAD_BUTTON_START;
                     break;
 
                 case GLFW_GAMEPAD_BUTTON_DPAD_UP:
-                    button = GAMEPAD_BUTTON_LEFT_FACE_UP;
+                    button = GAMEPAD_BUTTON_DPAD_UP;
                     break;
                 case GLFW_GAMEPAD_BUTTON_DPAD_RIGHT:
-                    button = GAMEPAD_BUTTON_LEFT_FACE_RIGHT;
+                    button = GAMEPAD_BUTTON_DPAD_RIGHT;
                     break;
                 case GLFW_GAMEPAD_BUTTON_DPAD_DOWN:
-                    button = GAMEPAD_BUTTON_LEFT_FACE_DOWN;
+                    button = GAMEPAD_BUTTON_DPAD_DOWN;
                     break;
                 case GLFW_GAMEPAD_BUTTON_DPAD_LEFT:
-                    button = GAMEPAD_BUTTON_LEFT_FACE_LEFT;
+                    button = GAMEPAD_BUTTON_DPAD_LEFT;
                     break;
 
                 case GLFW_GAMEPAD_BUTTON_LEFT_THUMB:
@@ -507,22 +673,24 @@ void input_process(Input *input) {
 
             // Register buttons for 2nd triggers (because GLFW doesn't count these as buttons
             // but rather axis)
-            engine()
-                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] =
+            engine()->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_LEFT_TRIGGER] =
                 (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_LEFT_TRIGGER] >
                        0.1);
             engine()
-                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] =
+                ->platform->input.gamepad.button_state_current[i][GAMEPAD_BUTTON_RIGHT_TRIGGER] =
                 (char)(engine()->platform->input.gamepad.axis_state[i][GAMEPAD_AXIS_RIGHT_TRIGGER] >
                        0.1);
 
             engine()->platform->input.gamepad.num_available_axes = GLFW_GAMEPAD_AXIS_LAST;
+#endif
         }
     }
 
     CORE.Window.was_resized_last_frame = false;
 
+#ifndef PLATFORM_WINDOWS
     glfwPollEvents();
+#endif
 }
 
 // Detect if a key has been pressed once

@@ -60,6 +60,9 @@ typedef struct Input {
         float axis_state[MAX_GAMEPADS][MAX_GAMEPAD_AXES]; // gamepad axis states
         char button_state_current[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
         char button_state_previous[MAX_GAMEPADS][MAX_GAMEPAD_AXES];
+#ifdef PLATFORM_WINDOWS
+        XINPUT_STATE xinput_state[MAX_GAMEPADS];
+#endif
     } gamepad;
 } Input;
 
@@ -81,6 +84,13 @@ typedef struct Platform {
         vec2i render_size;
         vec2i position;
     } window;
+
+    struct {
+        LPCWSTR app_name;
+        HINSTANCE hinstance;
+        HWND hwnd;
+        MSG msg;
+    } win32;
 
     Input input;
     Time time;
@@ -219,7 +229,16 @@ void game_default_function(void) {
 }
 
 bool game_is_running(void) {
+#ifdef PLATFORM_WINDOWS
+    if (PeekMessage(&engine()->platform->win32.msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&engine()->platform->win32.msg);
+        DispatchMessage(&engine()->platform->win32.msg);
+    }
+
+    return engine()->game.is_running && &engine()->platform->win32.msg.message == WM_QUIT;
+#else
     return engine()->game.is_running && !glfwWindowShouldClose(engine()->platform->window.handle);
+#endif
 }
 
 /*
@@ -362,6 +381,7 @@ WHICH INCLUDES VARIOUS ENGINE SUBMODULES FROM OTHER FILES
 */
 
 #include "platform.h"
+#include "windows.h"
 #include "graphics.h"
 #include "audio.h"
 
