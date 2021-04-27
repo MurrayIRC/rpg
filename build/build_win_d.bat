@@ -22,21 +22,17 @@ set inc=^
 :: Source files
 set src=^
 	%proj_root_dir%/src/main.c^
-	%proj_root_dir%/src/gl.c^
 	%proj_root_dir%/src/kaneda/shader.c^
 	%proj_root_dir%/src/kaneda/mem_debug.c^
 	%proj_root_dir%/src/kaneda/file.c^
 	%proj_root_dir%/src/kaneda/log.c
 
 set libs=^
-	-lopengl32^
 	-lkernel32 ^
 	-luser32^
 	-lshell32^
 	-lgdi32^
 	-lAdvapi32^
-	-L%glfw_lib%^
-	-lglfw3^
 	-lXinput
 
 :: Build

@@ -56,7 +56,11 @@ static void callback_window_size(GLFWwindow *window, int width, int height) {
 
     platform->window.render_size.width = width;
     platform->window.render_size.height = height;
+#ifdef PLATFORM_WINDOWS
+    log_warning("Not Implemented: Callback Window Size\n");
+#else
     glViewport(0, 0, platform->window.render_size.width, platform->window.render_size.height);
+#endif
 
     // CORE.Window.current_fbo.width = width;
     // CORE.Window.current_fbo.height = height;

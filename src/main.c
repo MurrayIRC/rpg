@@ -35,10 +35,29 @@ int32_t main(int32_t argv, char **argc) {
     }
 
     free(e);
+    return 0;
+}
 
-#ifdef PLATFORM_WINDOWS
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow) {
+    Game rpg = {.init = game_init,
+                .update = game_update,
+                .draw = game_draw,
+                .shutdown = game_shutdown,
+                .flags = {.is_fullscreen = false, .is_resizable = true, .vsync_on = true},
+                .frame_rate = 60.0f,
+                .window_width = 800,
+                .window_height = 600,
+                .window_title = "rpg"};
+
+    Engine *e = engine_create(rpg);
+
+    while (game_is_running()) {
+        engine_frame();
+        log_info("hello again\n");
+    }
+
+    free(e);
     printf("Press enter to continue...\n");
     getchar();
-#endif
     return 0;
 }

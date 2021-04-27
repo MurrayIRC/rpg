@@ -235,7 +235,7 @@ bool game_is_running(void) {
         DispatchMessage(&engine()->platform->win32.msg);
     }
 
-    return engine()->game.is_running && &engine()->platform->win32.msg.message == WM_QUIT;
+    return engine()->game.is_running && engine()->platform->win32.msg.message != WM_QUIT;
 #else
     return engine()->game.is_running && !glfwWindowShouldClose(engine()->platform->window.handle);
 #endif
@@ -323,7 +323,10 @@ void engine_frame(void) {
         return;
     }
 
+#ifdef PLATFORM_WINDOWS
+#else
     glfwSwapBuffers(platform->window.handle);
+#endif
 
     platform->time.current = time_elapsed();
     platform->time.render = platform->time.current - platform->time.previous;

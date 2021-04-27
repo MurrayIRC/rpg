@@ -811,7 +811,11 @@ int input_gamepad_get_last_button_pressed(void) {
 
 // Set internal gamepad mappings
 int input_gamepad_set_mappings(const char *mappings) {
+#ifdef PLATFORM_WINDOWS
+    log_warning("Not Implemented: Gamepad Set Mappings.\n");
+#else
     return glfwUpdateGamepadMappings(mappings);
+#endif
 }
 
 // Detect if a mouse button has been pressed once
@@ -855,8 +859,14 @@ vec2 input_mouse_get_position(void) {
 // Set mouse position XY
 void input_mouse_set_position(int x, int y) {
     engine()->platform->input.mouse.position = math_vec2((float)x, (float)y);
+
+#ifdef PLATFORM_WINDOWS
+    SetCursorPos(engine()->platform->input.mouse.position.x,
+                 engine()->platform->input.mouse.position.y);
+#else
     glfwSetCursorPos(CORE.Window.glfw_window, engine()->platform->input.mouse.position.x,
                      engine()->platform->input.mouse.position.y);
+#endif
 }
 
 // Returns mouse wheel movement Y
@@ -874,10 +884,19 @@ int input_mouse_get_cursor(void) {
 void input_mouse_set_cursor(int cursor) {
     engine()->platform->input.mouse.cursor = cursor;
     if (cursor == MOUSE_CURSOR_DEFAULT)
+#ifdef PLATFORM_WINDOWS
+        log_warning("Unimplemented: Set Cursor.\n");
+#else
         glfwSetCursor(CORE.Window.glfw_window, NULL);
+#endif
+
     else {
-        // NOTE: We are relating internal GLFW enum values to our MouseCursor enum values
+// NOTE: We are relating internal GLFW enum values to our MouseCursor enum values
+#ifdef PLATFORM_WINDOWS
+        log_warning("Unimplemented: Set Cursor.\n");
+#else
         glfwSetCursor(CORE.Window.glfw_window, glfwCreateStandardCursor(0x00036000 + cursor));
+#endif
     }
 }
 
@@ -891,7 +910,13 @@ void input_mouse_set_cursor(int cursor) {
 */
 
 float64 time_elapsed(void) {
+#ifdef PLATFORM_WINDOWS
+    INT64 current_time;
+    QueryPerformanceCounter((LARGE_INTEGER *)&current_time);
+    return current_time;
+#else
     return glfwGetTime() * 1000.0;
+#endif
 }
 
 float64 time_get_fps(void) {
@@ -908,8 +933,10 @@ float64 time_get_fps(void) {
         return 0;
     }
 
-    if ((glfwGetTime() - last) > FPS_STEP) {
-        last = (float)glfwGetTime();
+    float64 time = time_elapsed() / 1000.0;
+
+    if ((time - last) > FPS_STEP) {
+        last = (float)time;
         index = (index + 1) % FPS_CAPTURE_FRAMES_COUNT;
         average -= history[index];
         history[index] = fps_frame / FPS_CAPTURE_FRAMES_COUNT;

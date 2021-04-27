@@ -5,7 +5,11 @@ Graphics *graphics_create() {
     Graphics *gfx = kamalloc_init(Graphics);
 
     Platform *platform = engine()->platform;
+#ifdef PLATFORM_WINDOWS
+
+#else
     glViewport(0, 0, platform->window.render_size.width, platform->window.render_size.height);
+#endif
 
     return gfx;
 }
